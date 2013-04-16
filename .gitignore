@@ -11,3 +11,12 @@
 *.lai
 *.la
 *.a
+
+#VS Files
+*.vcxproj.user
+*.sdf
+
+#User files
+Debug
+Release
+SPP-*.zip
