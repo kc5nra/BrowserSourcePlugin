@@ -1,6 +1,6 @@
-ServerPingPlugin
+BrowserSourcePlugin
 ================
 
-Just a simple conversion of R1CH's JTV Server pinging application to a OBS plugin.
+Renders an offscreen browser window as a video source allowing you to stream videos/webpages (with transparency) as overlays.
 
-All credit to him.
+This might include javascript controllable overlays, video content or otherwise difficult to stream material
