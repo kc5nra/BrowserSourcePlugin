@@ -55,6 +55,8 @@ public:
 
 		generalUpdate = new Browser::Event(Browser::UPDATE, NULL);
 		webCore = 0;
+
+		updateEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
 	}
 
 	~BrowserManager() 
@@ -74,6 +76,7 @@ protected:
 		webCore = WebCore::Initialize(WebConfig());
 		
 		for(;;) {
+			WaitForSingleObject(updateEvent, INFINITE);
 			while(pendingEvents.Num()) {
 				EnterCriticalSection(&cs);
 				Browser::Event *browserEvent = pendingEvents.GetElement(0);
@@ -81,7 +84,27 @@ protected:
 				switch(browserEvent->eventType) {
 					case Browser::CREATE_VIEW: 
 					{
-						webViews.Add(browserEvent->source->CreateWebViewCallback(webCore, webViews.Num()));
+						if (browserEvent->param >= 0) {
+							WebView *webView = webViews.GetElement(browserEvent->param);
+							webView->Destroy();
+							webViews.Remove(browserEvent->param);
+							webViews.Insert(browserEvent->param, NULL);
+						}
+
+
+						int insertIndex = -1;
+						for(UINT i = 0; i < webViews.Num(); i++) {
+							if (webViews.GetElement(i) == NULL) {
+								insertIndex = i;
+								webViews.Remove(i);
+							}
+						}
+						if (insertIndex >= 0) {
+							webViews.Add(browserEvent->source->CreateWebViewCallback(webCore, insertIndex));
+						} else {
+							webViews.Add(browserEvent->source->CreateWebViewCallback(webCore, webViews.Num()));
+						}
+
 						delete browserEvent;
 						break;
 					}
@@ -144,12 +167,14 @@ protected:
 private:
 	WebCore *webCore;
 	CRITICAL_SECTION cs;
+
 	List<WebView *> webViews;
 	List<Browser::Event *> pendingEvents;
 	Browser::Event *generalUpdate;
-
+	
 	bool isStarted;
 	HANDLE threadHandle;
+	HANDLE updateEvent;
 
 public:
     void Startup() 
@@ -173,6 +198,7 @@ public:
 			EnterCriticalSection(&cs);
 			pendingEvents.Add(browserEvent);
 			LeaveCriticalSection(&cs);
+			SetEvent(updateEvent);
 		}
 	}
 

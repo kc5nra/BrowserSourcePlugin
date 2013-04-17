@@ -13,6 +13,38 @@ namespace Awesomium {
 	class WebCore;
 }
 
+struct BrowserSourceConfig {
+private:
+	XElement *element;
+public:
+	String url;
+	UINT width;
+	UINT height;
+	String customCss;
+
+	BrowserSourceConfig(XElement *element)
+	{
+		this->element = element;
+		Reload();
+	}
+
+	void Reload()
+	{
+		url = element->GetString(TEXT("url"));
+		width = element->GetInt(TEXT("width"));
+		height = element->GetInt(TEXT("height"));
+		customCss = element->GetString(TEXT("css"));
+	}
+
+	void Save()
+	{
+		element->SetString(TEXT("url"), url);
+		element->SetInt(TEXT("width"), width);
+		element->SetInt(TEXT("height"), height);
+		element->SetString(TEXT("css"), customCss);
+	}
+};
+
 class BrowserSourcePlugin
 {
 

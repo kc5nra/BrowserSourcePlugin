@@ -6,6 +6,7 @@
 #include "BrowserSourcePlugin.h"
 #include "Localization.h"
 #include "BrowserSource.h"
+#include "resource.h"
 
 #include <Awesomium\WebCore.h>
 
@@ -14,6 +15,83 @@ BrowserSourcePlugin *BrowserSourcePlugin::instance = NULL;
 
 #define BROWSER_SOURCE_CLASS TEXT("BrowserSource")
 
+INT_PTR CALLBACK ConfigureDialogProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+	switch(message)
+    {
+        case WM_INITDIALOG:
+        {
+			SetWindowLongPtr(hwnd, DWLP_USER, (LONG_PTR)lParam);
+			BrowserSourceConfig *config = (BrowserSourceConfig *)lParam;
+
+			LocalizeWindow(hwnd);
+
+			HWND hwndUrlOrAsset = GetDlgItem(hwnd, IDC_URL_OR_ASSET);
+			HWND hwndWidth = GetDlgItem(hwnd, IDC_WIDTH);
+            HWND hwndHeight = GetDlgItem(hwnd, IDC_HEIGHT);
+			HWND hwndCustomCss = GetDlgItem(hwnd, IDC_CUSTOM_CSS);
+
+			SendMessage(hwndUrlOrAsset, WM_SETTEXT, 0, (LPARAM)config->url.Array());
+			SendMessage(hwndWidth, WM_SETTEXT, 0, (LPARAM)IntString(config->width).Array());
+			SendMessage(hwndHeight, WM_SETTEXT, 0, (LPARAM)IntString(config->height).Array());
+			SendMessage(hwndCustomCss, WM_SETTEXT, 0, (LPARAM)config->customCss.Array());
+
+			return TRUE;
+		}
+		case WM_COMMAND:
+		{
+			switch(LOWORD(wParam)) 
+			{
+				case IDOK:
+				{
+					HWND hwndUrlOrAsset = GetDlgItem(hwnd, IDC_URL_OR_ASSET);
+					HWND hwndWidth = GetDlgItem(hwnd, IDC_WIDTH);
+					HWND hwndHeight = GetDlgItem(hwnd, IDC_HEIGHT);
+					HWND hwndCustomCss = GetDlgItem(hwnd, IDC_CUSTOM_CSS);
+					
+					BrowserSourceConfig *config = (BrowserSourceConfig *)GetWindowLongPtr(hwnd, DWLP_USER);
+
+					String str;
+					str.SetLength((UINT)SendMessage(GetDlgItem(hwnd, IDC_URL_OR_ASSET), WM_GETTEXTLENGTH, 0, 0));
+                    if(!str.Length()) return TRUE;
+                    SendMessage(GetDlgItem(hwnd, IDC_URL_OR_ASSET), WM_GETTEXT, str.Length()+1, (LPARAM)str.Array());
+					config->url = str;
+
+					str.SetLength((UINT)SendMessage(GetDlgItem(hwnd, IDC_WIDTH), WM_GETTEXTLENGTH, 0, 0));
+                    if(!str.Length()) return TRUE;
+                    SendMessage(GetDlgItem(hwnd, IDC_WIDTH), WM_GETTEXT, str.Length()+1, (LPARAM)str.Array());
+					config->width = str.ToInt();
+
+					str.SetLength((UINT)SendMessage(GetDlgItem(hwnd, IDC_HEIGHT), WM_GETTEXTLENGTH, 0, 0));
+                    if(!str.Length()) return TRUE;
+                    SendMessage(GetDlgItem(hwnd, IDC_HEIGHT), WM_GETTEXT, str.Length()+1, (LPARAM)str.Array());
+					config->height = str.ToInt();
+
+					str.SetLength((UINT)SendMessage(GetDlgItem(hwnd, IDC_CUSTOM_CSS), WM_GETTEXTLENGTH, 0, 0));
+                    if(!str.Length()) return TRUE;
+                    SendMessage(GetDlgItem(hwnd, IDC_CUSTOM_CSS), WM_GETTEXT, str.Length()+1, (LPARAM)str.Array());
+					config->customCss = str;
+
+					EndDialog(hwnd, IDOK);
+					return TRUE;
+				}
+				case IDCANCEL:
+				{
+					EndDialog(hwnd, IDCANCEL);
+					return TRUE;
+				}
+			}
+			break;
+		}
+		case WM_CLOSE:
+		{
+			EndDialog(hwnd, IDCANCEL);
+			return TRUE;
+		}
+	}
+	
+	return FALSE;
+}
 
 ImageSource* STDCALL CreateBrowserSource(XElement *data)
 {
@@ -22,6 +100,26 @@ ImageSource* STDCALL CreateBrowserSource(XElement *data)
 
 bool STDCALL ConfigureBrowserSource(XElement *element, bool bCreating)
 {
+
+	XElement *dataElement = element->GetElement(TEXT("DATA"));
+
+	if (!dataElement) {
+		dataElement = element->CreateElement(TEXT("DATA"));
+	}
+
+	BrowserSourceConfig *config = new BrowserSourceConfig(dataElement);
+
+	if(DialogBoxParam(BrowserSourcePlugin::hinstDLL, MAKEINTRESOURCE(IDD_BROWSERCONFIG), API->GetMainWindow(), ConfigureDialogProc, (LPARAM)config) == IDOK)
+    {
+		config->Save();
+		element->SetInt(TEXT("cx"), config->width);
+        element->SetInt(TEXT("cy"), config->height);
+
+		delete config;
+        return true;
+    }
+
+	delete config;
 	return true;
 }
 
@@ -65,6 +163,7 @@ BrowserSourcePlugin::~BrowserSourcePlugin()
 
 bool LoadPlugin()
 {
+	LoadLibrary(TEXT("Riched32.dll"));
     if(BrowserSourcePlugin::instance != NULL) {
         return false;
 	}

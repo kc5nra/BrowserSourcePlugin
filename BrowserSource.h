@@ -12,6 +12,7 @@ namespace Awesomium {
 }
 
 class BrowserDataSource;
+struct BrowserSourceConfig;
 
 class BrowserSource : public ImageSource
 {
@@ -21,10 +22,11 @@ public:
     ~BrowserSource();
 
 private:
-	Vect2 size;
+	Vect2 browserSize;
 	Texture *texture;
 	int hWebView;
 	BrowserDataSource *browserDataSource;
+	BrowserSourceConfig *config;
 
 public:
     void Tick(float fSeconds);

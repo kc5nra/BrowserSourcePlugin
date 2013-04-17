@@ -2,9 +2,6 @@
  * John Bradley (jrb@turrettech.com)
  */
 
-
-
-
 #include "BrowserSource.h"
 #include "BrowserSourcePlugin.h"
 
@@ -54,12 +51,12 @@ public:
 
 BrowserSource::BrowserSource(XElement *data)
 {
+	config = new BrowserSourceConfig(data);
+
 	UpdateSettings();
+
     Log(TEXT("Using Browser Source"));
 
-	size = Vect2(1200, 640);
-	
-	texture = CreateTexture(1200, 640, GS_BGRA, NULL, FALSE, FALSE);
 	hWebView = -2;
 
 	browserDataSource = new BrowserDataSource();
@@ -67,6 +64,7 @@ BrowserSource::BrowserSource(XElement *data)
 
 BrowserSource::~BrowserSource()
 {
+	delete config;
 	delete browserDataSource;
 	delete texture;
 }
@@ -77,20 +75,28 @@ void BrowserSource::Tick(float fSeconds)
 
 WebView *BrowserSource::CreateWebViewCallback(WebCore *webCore, const int hWebView) {
 	WebPreferences webPreferences;
-	webPreferences.user_stylesheet = WSLit("::-webkit-scrollbar { visibility: hidden; } body { background-color: rgba(0, 0, 0, 0); }");
+	WebString webString = WebString((const wchar16 *)config->url.Array());
+	webPreferences.user_stylesheet = webString;
 	
 	WebSession *webSession;
 	webSession = webCore->CreateWebSession(WSLit("plugins\\BrowserSourcePlugin\\cache"), webPreferences);
 	webSession->AddDataSource(WSLit("local"), browserDataSource);
 
 	WebView *webView;
-	webView = webCore->CreateWebView(1200, 640, webSession);
+	webView = webCore->CreateWebView(config->width, config->height, webSession);
 	webView->SetTransparent(true);
 
-	WebURL url(WSLit("asset://local/plugins/BrowserSourcePlugin/movie.html"));
+	//WebURL url(WSLit("asset://local/plugins/BrowserSourcePlugin/movie.html"));
+	webString = WebString((const wchar16 *)config->url.Array());
+	WebURL url(webString);
 	webView->LoadURL(url);
 	
 	this->hWebView = hWebView;
+
+	browserSize.x = float(config->width);
+	browserSize.y = float(config->height);
+
+	texture = CreateTexture(config->width, config->height, GS_BGRA, NULL, FALSE, FALSE);
 
 	return webView;
 }
@@ -135,9 +141,13 @@ void BrowserSource::Render(const Vect2 &pos, const Vect2 &size)
 
 void BrowserSource::UpdateSettings()
 {
+	BrowserManager *browserManager = BrowserSourcePlugin::instance->GetBrowserManager();	
+
+	config->Reload();
+	browserManager->AddEvent(new Browser::Event(Browser::CREATE_VIEW, this, hWebView));
 }
 
 Vect2 BrowserSource::GetSize() const 
 {
-	return size;
+	return browserSize;
 }
