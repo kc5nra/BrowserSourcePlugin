@@ -61,10 +61,14 @@ BrowserSource::BrowserSource(XElement *data)
 	
 	texture = CreateTexture(1200, 640, GS_BGRA, NULL, FALSE, FALSE);
 	hWebView = -2;
+
+	browserDataSource = new BrowserDataSource();
 }
 
 BrowserSource::~BrowserSource()
 {
+	delete browserDataSource;
+	delete texture;
 }
 
 void BrowserSource::Tick(float fSeconds)
@@ -77,8 +81,8 @@ WebView *BrowserSource::CreateWebViewCallback(WebCore *webCore, const int hWebVi
 	
 	WebSession *webSession;
 	webSession = webCore->CreateWebSession(WSLit("plugins\\BrowserSourcePlugin\\cache"), webPreferences);
-	webSession->AddDataSource(WSLit("local"), new BrowserDataSource());
-	
+	webSession->AddDataSource(WSLit("local"), browserDataSource);
+
 	WebView *webView;
 	webView = webCore->CreateWebView(1200, 640, webSession);
 	webView->SetTransparent(true);

@@ -11,6 +11,8 @@ namespace Awesomium {
 	class WebView;
 }
 
+class BrowserDataSource;
+
 class BrowserSource : public ImageSource
 {
 
@@ -22,6 +24,7 @@ private:
 	Vect2 size;
 	Texture *texture;
 	int hWebView;
+	BrowserDataSource *browserDataSource;
 
 public:
     void Tick(float fSeconds);

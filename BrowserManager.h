@@ -13,16 +13,18 @@
 
 using namespace Awesomium;
 
-namespace Browser {
-	enum EventType {
+namespace Browser 
+{
+	enum EventType 
+	{
 		UPDATE,
 		CREATE_VIEW,
 		SHUTDOWN,
 		CLEANUP
 	};
 
-	struct Event {
-
+	struct Event 
+	{
 		Event(EventType eventType, BrowserSource *source, int param = -1) {
 			this->eventType = eventType;
 			this->source = source;
@@ -35,24 +37,28 @@ namespace Browser {
 	};
 }
 
-class BrowserManager {
+class BrowserManager
+{
 
 public:
 
-	static DWORD WINAPI BrowserManagerEntry(LPVOID self) {
+	static DWORD WINAPI BrowserManagerEntry(LPVOID self) 
+	{
         ((BrowserManager *)(self))->BrowserManagerEntry();
         return 0;
     }
 
 public:
-	BrowserManager() {
+	BrowserManager() 
+	{
 		InitializeCriticalSection(&cs);
 
 		generalUpdate = new Browser::Event(Browser::UPDATE, NULL);
 		webCore = 0;
 	}
 
-	~BrowserManager() {
+	~BrowserManager() 
+	{
 		AddEvent(new Browser::Event(Browser::CLEANUP, NULL));
 		while(isStarted) {
 			Sleep(10);
@@ -62,7 +68,8 @@ public:
 
 protected:
 	// this method should never be called directly
-    void BrowserManagerEntry() {
+    void BrowserManagerEntry() 
+	{
 		
 		webCore = WebCore::Initialize(WebConfig());
 		
@@ -89,26 +96,29 @@ protected:
 					}
 					case Browser::SHUTDOWN: 
 					{
-						EnterCriticalSection(&cs);
 						while(webViews.Num()) {
 							WebView *webView = webViews.GetElement(0);
+							webView->session()->Release();
 							webViews.Remove(0);
 							webView->Destroy();
 						}
+
+						EnterCriticalSection(&cs);
 						for(UINT i = 1; i < pendingEvents.Num(); i++) {
 							// the only valid pending events at this point would be cleanup
-							if (pendingEvents.GetElement(0)->eventType != Browser::CLEANUP) {
+							Browser::Event *pendingEvent = pendingEvents.GetElement(0);
+							if (pendingEvent->eventType != Browser::CLEANUP) {
 								pendingEvents.Remove(i);
+								delete pendingEvent;
 								i--;
 							}
 						}
-
 						LeaveCriticalSection(&cs);
 						break;
 					}
+
 					case Browser::CLEANUP:
 					{
-						EnterCriticalSection(&cs);
 						while(webViews.Num()) {
 							WebView *webView = webViews.GetElement(0);
 							webViews.Remove(0);
@@ -116,7 +126,7 @@ protected:
 						}
 
 						webCore->Shutdown();
-						LeaveCriticalSection(&cs);
+						
 						delete browserEvent;
 						isStarted = false;
 						return;
@@ -142,20 +152,23 @@ private:
 	HANDLE threadHandle;
 
 public:
-    void Startup() {
+    void Startup() 
+	{
 		if (!isStarted) {
 			isStarted = true;
 			threadHandle = ::CreateThread(0, 0, BrowserManagerEntry, this, 0, 0);
-		}
+		}	
     }
 
-	void Update() {
+	void Update() 
+	{
 		if (isStarted) {
 			AddEvent(generalUpdate);
 		}
 	}
 
-	void AddEvent(Browser::Event *browserEvent) {
+	void AddEvent(Browser::Event *browserEvent)
+	{
 		if (isStarted) {
 			EnterCriticalSection(&cs);
 			pendingEvents.Add(browserEvent);
@@ -164,7 +177,8 @@ public:
 	}
 
 public:
-	WebCore *GetWebCore() {
+	WebCore *GetWebCore() 
+	{
 		return webCore;
 	}
 
