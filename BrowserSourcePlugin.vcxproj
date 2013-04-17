@@ -11,7 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="BrowserDataSource.h" />
+    <ClInclude Include="BrowserManager.h" />
     <ClInclude Include="BrowserSource.h" />
     <ClInclude Include="BrowserSourcePlugin.h" />
     <ClInclude Include="Localization.h" />

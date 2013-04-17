@@ -1,9 +1,13 @@
 /**
  * John Bradley (jrb@turrettech.com)
  */
+
+
 #include "BrowserSourcePlugin.h"
 #include "Localization.h"
 #include "BrowserSource.h"
+
+#include <Awesomium\WebCore.h>
 
 HINSTANCE BrowserSourcePlugin::hinstDLL = NULL;
 BrowserSourcePlugin *BrowserSourcePlugin::instance = NULL;
@@ -21,10 +25,12 @@ bool STDCALL ConfigureBrowserSource(XElement *element, bool bCreating)
 	return true;
 }
 
-BrowserSourcePlugin::BrowserSourcePlugin() 
+BrowserSourcePlugin::BrowserSourcePlugin()
 {
 	isDynamicLocale = false;
 	settings = NULL;
+
+	browserManager = new BrowserManager();
 
 	if (!locale->HasLookup(KEY("PluginName"))) {
 		isDynamicLocale = true;
@@ -44,6 +50,8 @@ BrowserSourcePlugin::BrowserSourcePlugin()
 BrowserSourcePlugin::~BrowserSourcePlugin() 
 {
 	
+	delete browserManager;
+
 	if (isDynamicLocale) {
 		int localizationStringCount = sizeof(localizationStrings) / sizeof(CTSTR);
 		Log(TEXT("Server Ping plugin instance deleted; removing dynamically loaded localization strings"));
@@ -57,26 +65,41 @@ BrowserSourcePlugin::~BrowserSourcePlugin()
 
 bool LoadPlugin()
 {
-    if(BrowserSourcePlugin::instance != NULL)
+    if(BrowserSourcePlugin::instance != NULL) {
         return false;
+	}
     BrowserSourcePlugin::instance = new BrowserSourcePlugin();
     return true;
 }
 
 void UnloadPlugin()
 {
-    if(BrowserSourcePlugin::instance == NULL)
+    if(BrowserSourcePlugin::instance == NULL) {
         return;
+	}
     delete BrowserSourcePlugin::instance;
     BrowserSourcePlugin::instance = NULL;
 }
 
 void OnStartStream()
 {
+	if (BrowserSourcePlugin::instance == NULL) {
+		return;
+	}
+
+	BrowserSourcePlugin *plugin = BrowserSourcePlugin::instance;
+	plugin->GetBrowserManager()->Startup();
 }
 
 void OnStopStream()
 {
+	if (BrowserSourcePlugin::instance == NULL) {
+		return;
+	}
+
+	BrowserSourcePlugin *plugin = BrowserSourcePlugin::instance;
+	
+	plugin->GetBrowserManager()->AddEvent(new Browser::Event(Browser::SHUTDOWN, NULL));
 }
 
 CTSTR GetPluginName()

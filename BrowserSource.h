@@ -21,14 +21,17 @@ public:
 private:
 	Vect2 size;
 	Texture *texture;
-	Awesomium::WebCore *webCore;
-	Awesomium::WebSession *webSession;
-	Awesomium::WebView *webView;
+	int hWebView;
 
 public:
     void Tick(float fSeconds);
-    void DrawBitmap(UINT texID, float alpha, const Vect2 &startPos, const Vect2 &startSize);
     void Render(const Vect2 &pos, const Vect2 &size);
     void UpdateSettings();
     Vect2 GetSize() const;
+
+
+// callbacks
+public:
+	Awesomium::WebView *CreateWebViewCallback(Awesomium::WebCore *webCore, const int hWebView);
+	void UpdateCallback(Awesomium::WebView *webView);
 };
