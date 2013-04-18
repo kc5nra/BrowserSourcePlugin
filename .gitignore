@@ -23,4 +23,7 @@ Plugin/Release
 Wrapper/Debug
 Wrapper/Release
 
+Release/BrowserSourcePluginWrapper.dll
+Release/BrowserSourcePlugin/BrowserSourcePlugin.dll
+
 BSP-*.zip

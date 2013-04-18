@@ -66,6 +66,10 @@ BrowserSource::~BrowserSource()
 	delete config;
 	delete browserDataSource;
 	delete texture;
+
+	browserDataSource = NULL;
+	config = NULL;
+	texture = NULL;
 }
 
 void BrowserSource::Tick(float fSeconds)
@@ -103,7 +107,7 @@ WebView *BrowserSource::CreateWebViewCallback(WebCore *webCore, const int hWebVi
 void BrowserSource::UpdateCallback(WebView *webView)
 {
 	BitmapSurface *surface = (BitmapSurface *)webView->surface();
-	if (surface) {
+	if (surface && texture) {
 		texture->SetImage((void *)surface->buffer(), GS_IMAGEFORMAT_BGRA, surface->row_span());
 	}
 }
