@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual C++ Express 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BrowserSourcePluginWrapper", "Wrapper\BrowserSourcePluginWrapper.vcxproj", "{7CD84415-84A6-4127-A498-E932E83C0717}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BrowserSourcePlugin", "Plugin\BrowserSourcePlugin.vcxproj", "{8EC42B58-A974-4302-8C45-532BA61DC015}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7CD84415-84A6-4127-A498-E932E83C0717}.Debug|Win32.ActiveCfg = Debug|Win32
+		{7CD84415-84A6-4127-A498-E932E83C0717}.Debug|Win32.Build.0 = Debug|Win32
+		{7CD84415-84A6-4127-A498-E932E83C0717}.Release|Win32.ActiveCfg = Release|Win32
+		{7CD84415-84A6-4127-A498-E932E83C0717}.Release|Win32.Build.0 = Release|Win32
+		{8EC42B58-A974-4302-8C45-532BA61DC015}.Debug|Win32.ActiveCfg = Debug|Win32
+		{8EC42B58-A974-4302-8C45-532BA61DC015}.Debug|Win32.Build.0 = Debug|Win32
+		{8EC42B58-A974-4302-8C45-532BA61DC015}.Release|Win32.ActiveCfg = Release|Win32
+		{8EC42B58-A974-4302-8C45-532BA61DC015}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

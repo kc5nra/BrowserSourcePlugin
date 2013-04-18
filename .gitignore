@@ -15,8 +15,12 @@
 #VS Files
 *.vcxproj.user
 *.sdf
+*.suo
 
 #User files
-Debug
-Release
-SPP-*.zip
+Plugin/Debug
+Plugin/Release
+Wrapper/Debug
+Wrapper/Release
+
+BSP-*.zip
