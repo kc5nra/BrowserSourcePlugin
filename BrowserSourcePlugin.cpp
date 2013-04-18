@@ -101,13 +101,17 @@ ImageSource* STDCALL CreateBrowserSource(XElement *data)
 bool STDCALL ConfigureBrowserSource(XElement *element, bool bCreating)
 {
 
-	XElement *dataElement = element->GetElement(TEXT("DATA"));
+	XElement *dataElement = element->GetElement(TEXT("data"));
 
-	if (!dataElement) {
-		dataElement = element->CreateElement(TEXT("DATA"));
+	bool isMissingDataElement;
+	if (isMissingDataElement = !dataElement) {
+		dataElement = element->CreateElement(TEXT("data"));
 	}
 
 	BrowserSourceConfig *config = new BrowserSourceConfig(dataElement);
+	if (isMissingDataElement) {
+		config->Populate();
+	}
 
 	if(DialogBoxParam(BrowserSourcePlugin::hinstDLL, MAKEINTRESOURCE(IDD_BROWSERCONFIG), API->GetMainWindow(), ConfigureDialogProc, (LPARAM)config) == IDOK)
     {
@@ -120,7 +124,7 @@ bool STDCALL ConfigureBrowserSource(XElement *element, bool bCreating)
     }
 
 	delete config;
-	return true;
+	return false;
 }
 
 BrowserSourcePlugin::BrowserSourcePlugin()

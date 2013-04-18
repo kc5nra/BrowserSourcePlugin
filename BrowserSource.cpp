@@ -51,15 +51,14 @@ public:
 
 BrowserSource::BrowserSource(XElement *data)
 {
-	config = new BrowserSourceConfig(data);
-
-	UpdateSettings();
-
-    Log(TEXT("Using Browser Source"));
+	Log(TEXT("Using Browser Source"));
 
 	hWebView = -2;
-
 	browserDataSource = new BrowserDataSource();
+
+	config = new BrowserSourceConfig(data);
+
+	UpdateSettings();	
 }
 
 BrowserSource::~BrowserSource()
@@ -75,7 +74,7 @@ void BrowserSource::Tick(float fSeconds)
 
 WebView *BrowserSource::CreateWebViewCallback(WebCore *webCore, const int hWebView) {
 	WebPreferences webPreferences;
-	WebString webString = WebString((const wchar16 *)config->url.Array());
+	WebString webString = WebString((const wchar16 *)config->customCss.Array());
 	webPreferences.user_stylesheet = webString;
 	
 	WebSession *webSession;
@@ -142,6 +141,10 @@ void BrowserSource::Render(const Vect2 &pos, const Vect2 &size)
 void BrowserSource::UpdateSettings()
 {
 	BrowserManager *browserManager = BrowserSourcePlugin::instance->GetBrowserManager();	
+
+	if (hWebView == NO_VIEW) {
+		hWebView = PENDING_VIEW;
+	}
 
 	config->Reload();
 	browserManager->AddEvent(new Browser::Event(Browser::CREATE_VIEW, this, hWebView));

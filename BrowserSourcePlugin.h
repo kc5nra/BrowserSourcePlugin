@@ -28,6 +28,14 @@ public:
 		Reload();
 	}
 
+	void Populate()
+	{
+		url = TEXT("http://www.obsproject.com");
+		width = 640;
+		height = 480;
+		customCss = TEXT("::-webkit-scrollbar { visibility: hidden; }\nbody { background-color: rgba(0, 0, 0, 0); }");
+	}
+
 	void Reload()
 	{
 		url = element->GetString(TEXT("url"));

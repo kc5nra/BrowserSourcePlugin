@@ -91,7 +91,6 @@ protected:
 							webViews.Insert(browserEvent->param, NULL);
 						}
 
-
 						int insertIndex = -1;
 						for(UINT i = 0; i < webViews.Num(); i++) {
 							if (webViews.GetElement(i) == NULL) {
@@ -194,12 +193,10 @@ public:
 
 	void AddEvent(Browser::Event *browserEvent)
 	{
-		if (isStarted) {
-			EnterCriticalSection(&cs);
-			pendingEvents.Add(browserEvent);
-			LeaveCriticalSection(&cs);
-			SetEvent(updateEvent);
-		}
+		EnterCriticalSection(&cs);
+		pendingEvents.Add(browserEvent);
+		LeaveCriticalSection(&cs);
+		SetEvent(updateEvent);
 	}
 
 public:
