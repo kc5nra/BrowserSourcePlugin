@@ -31,21 +31,27 @@ public:
 		String filePath(buffer);
 		
 		XFile file;
-		String document;
 
+		LPSTR lpFileDataUTF8 = 0;
+		DWORD dwFileSize = 0;
 		if(file.Open(filePath, XFILE_READ | XFILE_SHARED, XFILE_OPENEXISTING)) {
-			file.ReadFileToString(document);
+			file.SetPos(0, XFILE_BEGIN);
+			dwFileSize = (DWORD)file.GetFileSize();
+			lpFileDataUTF8 = (LPSTR)Allocate(dwFileSize+1);
+			lpFileDataUTF8[dwFileSize] = 0;
+			file.Read(lpFileDataUTF8, dwFileSize);
 		} else {
-			document = TEXT("");
-			AppWarning(TEXT("BrowserDataSource::OnRequest: could not open specified file %s (invalid file name or access violation)"), buffer);
+			Log(TEXT("BrowserDataSource::OnRequest: could not open specified file %s (invalid file name or access violation)"), buffer);
 		}
-		unsigned char *documentBuffer = (unsigned char *)document.CreateUTF8String();
 
 		SendResponse(request_id,
-				strlen((const char *)documentBuffer),
-				documentBuffer,
+				dwFileSize,
+				(unsigned char *)lpFileDataUTF8,
 				WSLit("text/html"));
 		
+		Free(lpFileDataUTF8);
+
+		file.Close();
 	}
 };
 
@@ -58,18 +64,27 @@ BrowserSource::BrowserSource(XElement *data)
 
 	config = new BrowserSourceConfig(data);
 
+	InitializeCriticalSection(&textureLock);
+
 	UpdateSettings();	
 }
 
 BrowserSource::~BrowserSource()
 {
+
+	if (hWebView >= 0) {
+		BrowserSourcePlugin::instance->GetBrowserManager()->ShutdownAndWait(hWebView);
+	}
+
+	EnterCriticalSection(&textureLock);
+	delete texture;
+	texture = NULL;
+	LeaveCriticalSection(&textureLock);
+
 	delete config;
 	delete browserDataSource;
-	delete texture;
-
 	browserDataSource = NULL;
 	config = NULL;
-	texture = NULL;
 }
 
 void BrowserSource::Tick(float fSeconds)
@@ -89,7 +104,6 @@ WebView *BrowserSource::CreateWebViewCallback(WebCore *webCore, const int hWebVi
 	webView = webCore->CreateWebView(config->width, config->height, webSession);
 	webView->SetTransparent(true);
 
-	//WebURL url(WSLit("asset://local/plugins/BrowserSourcePlugin/movie.html"));
 	webString = WebString((const wchar16 *)config->url.Array());
 	WebURL url(webString);
 	webView->LoadURL(url);
@@ -99,7 +113,9 @@ WebView *BrowserSource::CreateWebViewCallback(WebCore *webCore, const int hWebVi
 	browserSize.x = float(config->width);
 	browserSize.y = float(config->height);
 
+	EnterCriticalSection(&textureLock);
 	texture = CreateTexture(config->width, config->height, GS_BGRA, NULL, FALSE, FALSE);
+	LeaveCriticalSection(&textureLock);
 
 	return webView;
 }
@@ -107,9 +123,12 @@ WebView *BrowserSource::CreateWebViewCallback(WebCore *webCore, const int hWebVi
 void BrowserSource::UpdateCallback(WebView *webView)
 {
 	BitmapSurface *surface = (BitmapSurface *)webView->surface();
+
+	EnterCriticalSection(&textureLock);
 	if (surface && texture) {
 		texture->SetImage((void *)surface->buffer(), GS_IMAGEFORMAT_BGRA, surface->row_span());
 	}
+	LeaveCriticalSection(&textureLock);
 }
 
 void BrowserSource::Render(const Vect2 &pos, const Vect2 &size)
@@ -135,9 +154,11 @@ void BrowserSource::Render(const Vect2 &pos, const Vect2 &size)
 			browserManager->AddEvent(new Browser::Event(Browser::UPDATE, this, hWebView));
 			browserManager->Update();
 
+			EnterCriticalSection(&textureLock);
 			if (texture) {
 				DrawSprite(texture, 0xFFFFFFFF, pos.x, pos.y, pos.x + size.x, pos.y + size.y);
 			}
+			LeaveCriticalSection(&textureLock);
 		}
 	}
 }

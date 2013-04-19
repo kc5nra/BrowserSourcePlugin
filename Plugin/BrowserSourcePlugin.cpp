@@ -180,6 +180,7 @@ void UnloadPlugin()
     if(BrowserSourcePlugin::instance == NULL) {
         return;
 	}
+
     delete BrowserSourcePlugin::instance;
     BrowserSourcePlugin::instance = NULL;
 }
@@ -199,10 +200,6 @@ void OnStopStream()
 	if (BrowserSourcePlugin::instance == NULL) {
 		return;
 	}
-
-	BrowserSourcePlugin *plugin = BrowserSourcePlugin::instance;
-	
-	plugin->GetBrowserManager()->AddEvent(new Browser::Event(Browser::SHUTDOWN, NULL));
 }
 
 CTSTR GetPluginName()

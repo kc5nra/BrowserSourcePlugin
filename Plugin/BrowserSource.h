@@ -28,6 +28,8 @@ private:
 	BrowserDataSource *browserDataSource;
 	BrowserSourceConfig *config;
 
+	CRITICAL_SECTION textureLock;
+
 public:
     void Tick(float fSeconds);
     void Render(const Vect2 &pos, const Vect2 &size);

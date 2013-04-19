@@ -69,7 +69,6 @@ private:
 	ServerPingSettings *settings;
 	BrowserManager *browserManager;
 
-
 public:
 	ServerPingSettings *GetSettings() { return settings; }
 	BrowserManager *GetBrowserManager() { return browserManager; }

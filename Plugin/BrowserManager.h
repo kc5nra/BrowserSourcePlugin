@@ -25,15 +25,37 @@ namespace Browser
 
 	struct Event 
 	{
-		Event(EventType eventType, BrowserSource *source, int param = -1) {
+		Event(EventType eventType, BrowserSource *source, int webView = -1, bool isNotifyingOnCompletion = false) {
 			this->eventType = eventType;
 			this->source = source;
-			this->param = param;
+			this->webView = webView;
+			if (isNotifyingOnCompletion) {
+				this->completionEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+			} else {
+				this->completionEvent = NULL;
+			}
+		}
+
+		~Event() {
+		}
+		
+		void Complete() {
+			if (completionEvent) {
+				SetEvent(completionEvent);
+			}
+		}
+
+		// I don't like the spelling Canceled
+		void Cancelled() {
+			if (completionEvent) {
+				SetEvent(completionEvent);
+			}
 		}
 
 		enum EventType eventType;
 		BrowserSource *source;
-		int param;
+		int webView;
+		HANDLE completionEvent;
 	};
 }
 
@@ -68,26 +90,31 @@ public:
 		delete generalUpdate;
 	}
 
+
 protected:
 	// this method should never be called directly
     void BrowserManagerEntry() 
 	{
-		webCore = WebCore::Initialize(WebConfig());
-		
+		WebConfig webConfig = WebConfig();
+		webConfig.additional_options.Push(WSLit("--register-pepper-plugins"));
+		webCore = WebCore::Initialize(webConfig);
+		UINT maxFps = API->GetMaxFPS();
+
 		for(;;) {
 			WaitForSingleObject(updateEvent, INFINITE);
 			while(pendingEvents.Num()) {
 				EnterCriticalSection(&cs);
 				Browser::Event *browserEvent = pendingEvents.GetElement(0);
 				LeaveCriticalSection(&cs);
+
 				switch(browserEvent->eventType) {
 					case Browser::CREATE_VIEW: 
 					{
-						if (browserEvent->param >= 0) {
-							WebView *webView = webViews.GetElement(browserEvent->param);
+						if (browserEvent->webView >= 0) {
+							WebView *webView = webViews.GetElement(browserEvent->webView);
 							webView->Destroy();
-							webViews.Remove(browserEvent->param);
-							webViews.Insert(browserEvent->param, NULL);
+							webViews.Remove(browserEvent->webView);
+							webViews.Insert(browserEvent->webView, NULL);
 						}
 
 						int insertIndex = -1;
@@ -95,46 +122,58 @@ protected:
 							if (webViews.GetElement(i) == NULL) {
 								insertIndex = i;
 								webViews.Remove(i);
+								break;
 							}
 						}
 						if (insertIndex >= 0) {
-							webViews.Add(browserEvent->source->CreateWebViewCallback(webCore, insertIndex));
+							webViews.Insert(insertIndex, browserEvent->source->CreateWebViewCallback(webCore, insertIndex));
 						} else {
 							webViews.Add(browserEvent->source->CreateWebViewCallback(webCore, webViews.Num()));
 						}
 
+						browserEvent->Complete();
 						delete browserEvent;
 						break;
 					}
 					case Browser::UPDATE:
 					{
 						webCore->Update();
+
 						if (browserEvent->source) {
-							browserEvent->source->UpdateCallback(webViews.GetElement(browserEvent->param));
+							browserEvent->source->UpdateCallback(webViews.GetElement(browserEvent->webView));
+							browserEvent->Complete();
 							delete browserEvent;
 						}
+
+						browserEvent->Complete();
 						break;
 					}
 					case Browser::SHUTDOWN: 
 					{
-						while(webViews.Num()) {
-							WebView *webView = webViews.GetElement(0);
-							webView->session()->Release();
-							webViews.Remove(0);
-							webView->Destroy();
+						if (browserEvent->webView >= 0) {
+							
+							WebView *webView = webViews.GetElement(browserEvent->webView);
+							if (webView) {
+								webView->Destroy();
+								webViews.Remove(browserEvent->webView);
+								webViews.Insert(browserEvent->webView, NULL);
+							}
+
+							EnterCriticalSection(&cs);
+							for(UINT i = 1; i < pendingEvents.Num(); i++) {
+								// remove all events belonging to this web view
+								// this would include only Update, Shutdown and Create View requests
+								Browser::Event *pendingEvent = pendingEvents.GetElement(0);
+								if (pendingEvent->webView == browserEvent->webView) {
+									pendingEvents.Remove(i);
+									pendingEvent->Cancelled();
+									delete pendingEvent;
+								}
+							}
+							LeaveCriticalSection(&cs);
 						}
 
-						EnterCriticalSection(&cs);
-						for(UINT i = 1; i < pendingEvents.Num(); i++) {
-							// the only valid pending events at this point would be cleanup
-							Browser::Event *pendingEvent = pendingEvents.GetElement(0);
-							if (pendingEvent->eventType != Browser::CLEANUP) {
-								pendingEvents.Remove(i);
-								delete pendingEvent;
-								i--;
-							}
-						}
-						LeaveCriticalSection(&cs);
+						browserEvent->Complete();
 						break;
 					}
 
@@ -143,11 +182,14 @@ protected:
 						while(webViews.Num()) {
 							WebView *webView = webViews.GetElement(0);
 							webViews.Remove(0);
-							webView->Destroy();
+							if (webView) {
+								webView->Destroy();
+							}
 						}
 
 						webCore->Shutdown();
 						
+						browserEvent->Complete();
 						delete browserEvent;
 						isStarted = false;
 						return;
@@ -196,6 +238,14 @@ public:
 		pendingEvents.Add(browserEvent);
 		LeaveCriticalSection(&cs);
 		SetEvent(updateEvent);
+	}
+
+	void ShutdownAndWait(int hWebView)
+	{
+		Browser::Event *shutdownEvent = new Browser::Event(Browser::SHUTDOWN, NULL, hWebView, true);
+		AddEvent(shutdownEvent);
+		WaitForSingleObject(shutdownEvent->completionEvent, INFINITE);
+		delete shutdownEvent;
 	}
 
 public:
