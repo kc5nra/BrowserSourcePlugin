@@ -114,6 +114,10 @@ WebView *BrowserSource::CreateWebViewCallback(WebCore *webCore, const int hWebVi
 	browserSize.y = float(config->height);
 
 	EnterCriticalSection(&textureLock);
+	if (texture) {
+		delete texture;
+		texture = 0;
+	}
 	texture = CreateTexture(config->width, config->height, GS_BGRA, NULL, FALSE, FALSE);
 	LeaveCriticalSection(&textureLock);
 
