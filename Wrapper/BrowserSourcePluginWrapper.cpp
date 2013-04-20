@@ -14,6 +14,8 @@ static HMODULE hmodLibEGL;
 static HMODULE hmodLibGLESv2;
 static HMODULE hmodIcudt;
 static HMODULE hmodAwesomium;
+static HMODULE hmodZlib;
+static HMODULE hmodRiched32;
 
 static LOADPLUGIN_PROC InternalLoadPlugin = 0;
 static UNLOADPLUGIN_PROC InternalUnloadPlugin = 0;
@@ -69,19 +71,27 @@ BOOL CALLBACK DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 			
 			// order is important!
 
-			hmodAvUtil = LoadLibrary(L".\\plugins\\BrowserSourcePlugin\\lib\\avutil-51.dll");
-			hmodAvCodec = LoadLibrary(L".\\plugins\\BrowserSourcePlugin\\lib\\avcodec-53.dll");
-			hmodAvFormat = LoadLibrary(L".\\plugins\\BrowserSourcePlugin\\lib\\avformat-53.dll");
+			// awesomium reqs
+			hmodAvUtil		= LoadLibrary(L".\\plugins\\BrowserSourcePlugin\\lib\\avutil-51.dll");
+			hmodAvCodec		= LoadLibrary(L".\\plugins\\BrowserSourcePlugin\\lib\\avcodec-53.dll");
+			hmodAvFormat	= LoadLibrary(L".\\plugins\\BrowserSourcePlugin\\lib\\avformat-53.dll");
 			
-			hmodLibGLESv2 = LoadLibrary(L".\\plugins\\BrowserSourcePlugin\\lib\\libGLESv2.dll");
-			hmodLibEGL = LoadLibrary(L".\\plugins\\BrowserSourcePlugin\\lib\\libEGL.dll");
+			hmodLibGLESv2	= LoadLibrary(L".\\plugins\\BrowserSourcePlugin\\lib\\libGLESv2.dll");
+			hmodLibEGL		= LoadLibrary(L".\\plugins\\BrowserSourcePlugin\\lib\\libEGL.dll");
 			
-			hmodIcudt = LoadLibrary(L".\\plugins\\BrowserSourcePlugin\\lib\\icudt.dll");
+			hmodIcudt		= LoadLibrary(L".\\plugins\\BrowserSourcePlugin\\lib\\icudt.dll");
 			
-			hmodAwesomium = LoadLibrary(L".\\plugins\\BrowserSourcePlugin\\lib\\awesomium.dll");
+			hmodAwesomium	= LoadLibrary(L".\\plugins\\BrowserSourcePlugin\\lib\\awesomium.dll");
 
-			hmodBspPlugin = LoadLibrary(L".\\plugins\\BrowserSourcePlugin\\BrowserSourcePlugin.dll");
-			
+			// SwfReader reqs
+			hmodZlib		= LoadLibrary(L".\\plugins\\BrowserSourcePlugin\\lib\\zlib1.dll");
+
+			// Settings GUI reqs			
+			hmodRiched32	= LoadLibrary(L"Riched32.dll");
+
+			// main plugin dll
+			hmodBspPlugin	= LoadLibrary(L".\\plugins\\BrowserSourcePlugin\\BrowserSourcePlugin.dll");
+
 			if (hmodBspPlugin != NULL) {
 				InternalLoadPlugin = (LOADPLUGIN_PROC)GetProcAddress(hmodBspPlugin, "LoadPlugin");
 				InternalUnloadPlugin = (UNLOADPLUGIN_PROC)GetProcAddress(hmodBspPlugin, "UnloadPlugin");
@@ -89,13 +99,14 @@ BOOL CALLBACK DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 				InternalOnStopStream = (ONSTOPSTREAM_PROC)GetProcAddress(hmodBspPlugin, "OnStopStream");
 				InternalGetPluginName = (GETPLUGINNAME_PROC)GetProcAddress(hmodBspPlugin, "GetPluginName");
 				InternalGetPluginDescription = (GETPLUGINDESCRIPTION_PROC)GetProcAddress(hmodBspPlugin, "GetPluginDescription");
-
 			}
 			break;
  
 		case DLL_PROCESS_DETACH:
 
 			if (hmodBspPlugin) FreeLibrary(hmodBspPlugin);
+			if (hmodRiched32) FreeLibrary(hmodRiched32);
+			if (hmodZlib) FreeLibrary(hmodZlib);
 			if (hmodAwesomium) FreeLibrary(hmodAwesomium);
 			if (hmodIcudt) FreeLibrary(hmodIcudt);
 			if (hmodLibEGL) FreeLibrary(hmodLibEGL);

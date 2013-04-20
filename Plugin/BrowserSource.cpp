@@ -4,6 +4,7 @@
 
 #include "BrowserSource.h"
 #include "BrowserSourcePlugin.h"
+#include "SwfReader.h"
 
 #include <Awesomium\WebCore.h>
 #include <Awesomium\WebView.h>
@@ -17,10 +18,36 @@ using namespace Awesomium;
 #define NO_VIEW -2
 #define PENDING_VIEW -1
 
+struct FileMimeType {
+	FileMimeType(const String &fileType, const String &mimeType) {
+		this->fileType = fileType;
+		this->mimeType = mimeType;
+	}
+
+	String fileType;
+	String mimeType;
+};
+
 class BrowserDataSource : public DataSource 
 {
+
+private:
+	bool isWrappingAsset;
+	String assetWrapTemplate;
+	int swfWidth;
+	int swfHeight;
+
+	List<FileMimeType> mimeTypes;
+
 public:
-	BrowserDataSource() { }
+	BrowserDataSource(bool isWrappingAsset, const String &assetWrapTemplate, int swfWidth, int swfHeight) 
+	{ 
+		this->isWrappingAsset = isWrappingAsset;
+		this->assetWrapTemplate = assetWrapTemplate;
+		this->swfWidth = swfWidth;
+		this->swfHeight = swfHeight;
+	}
+
 	virtual ~BrowserDataSource() { }
 	
 public:
@@ -44,14 +71,74 @@ public:
 			Log(TEXT("BrowserDataSource::OnRequest: could not open specified file %s (invalid file name or access violation)"), buffer);
 		}
 
-		SendResponse(request_id,
+		String mimeType = TEXT("text/html");
+
+		for(UINT i = 0; i < mimeTypes.Num(); i++) {
+			FileMimeType &fileMimeType = mimeTypes.GetElement(i);
+			if (fileMimeType.fileType.Length() > filePath.Length()) {
+				continue;
+			}
+			if (filePath.Right(filePath.Length() - fileMimeType.fileType.Length()).CompareI(fileMimeType.fileType)) {
+				mimeType = fileMimeType.mimeType;
+				break;
+			}
+		}
+
+		WebString wsMimeType = WebString((wchar16 *)mimeType.Array());
+
+		if (isWrappingAsset) {
+			isWrappingAsset = false;
+
+			String fileName;
+
+			for(UINT i = filePath.Length() - 1; i >= 0; i--) {
+				if (filePath[i] == '/') {
+					fileName = filePath.Right(filePath.Length() - i - 1);
+					break;
+				}
+			}
+
+			assetWrapTemplate.FindReplace(TEXT("$(FILE)"), fileName);
+			
+			//TODO: Figure out what to do with this information
+			// Since a lot of flash is vector art, it ends up 
+			// making it super blurry if the actual size
+			// is pretty small.
+
+			//SwfReader swfReader((unsigned char *)lpFileDataUTF8);
+			//if (!swfReader.hasError()) {
+			//	swfWidth = swfReader.getWidth();
+			//	swfHeight = swfReader.getHeight();
+			//}
+
+			assetWrapTemplate.FindReplace(TEXT("$(WIDTH)"), IntString(swfWidth));
+			assetWrapTemplate.FindReplace(TEXT("$(HEIGHT)"), IntString(swfHeight));
+
+			LPSTR lpAssetWrapTemplate = assetWrapTemplate.CreateUTF8String();
+			SendResponse(request_id,
+				strlen(lpAssetWrapTemplate),
+				(unsigned char *)lpAssetWrapTemplate,
+				WSLit("text/html"));
+
+			Free(lpAssetWrapTemplate);
+				
+			
+		} else {
+			SendResponse(request_id,
 				dwFileSize,
 				(unsigned char *)lpFileDataUTF8,
-				WSLit("text/html"));
+				wsMimeType);
+		}
+
+		
 		
 		Free(lpFileDataUTF8);
 
 		file.Close();
+	}
+
+	void AddMimeType(const String &fileType, const String &mimeType) {
+		mimeTypes.Add(FileMimeType(fileType, mimeType));
 	}
 };
 
@@ -60,7 +147,7 @@ BrowserSource::BrowserSource(XElement *data)
 	Log(TEXT("Using Browser Source"));
 
 	hWebView = -2;
-	browserDataSource = new BrowserDataSource();
+	browserDataSource = NULL;
 
 	config = new BrowserSourceConfig(data);
 
@@ -98,6 +185,11 @@ WebView *BrowserSource::CreateWebViewCallback(WebCore *webCore, const int hWebVi
 	
 	WebSession *webSession;
 	webSession = webCore->CreateWebSession(WSLit("plugins\\BrowserSourcePlugin\\cache"), webPreferences);
+	
+	if (browserDataSource) {
+		delete browserDataSource;
+	}
+	browserDataSource = new BrowserDataSource(config->isWrappingAsset, config->assetWrapTemplate, config->width, config->height);
 	webSession->AddDataSource(WSLit("local"), browserDataSource);
 
 	WebView *webView;

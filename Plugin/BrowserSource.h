@@ -24,6 +24,7 @@ public:
 private:
 	Vect2 browserSize;
 	Texture *texture;
+	int id;
 	int hWebView;
 	BrowserDataSource *browserDataSource;
 	BrowserSourceConfig *config;

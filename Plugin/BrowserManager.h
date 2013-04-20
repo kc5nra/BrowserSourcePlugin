@@ -96,17 +96,17 @@ protected:
     void BrowserManagerEntry() 
 	{
 		WebConfig webConfig = WebConfig();
-		webConfig.additional_options.Push(WSLit("--register-pepper-plugins"));
 		webCore = WebCore::Initialize(webConfig);
 		UINT maxFps = API->GetMaxFPS();
 
 		for(;;) {
+
 			WaitForSingleObject(updateEvent, INFINITE);
 			while(pendingEvents.Num()) {
 				EnterCriticalSection(&cs);
 				Browser::Event *browserEvent = pendingEvents.GetElement(0);
 				LeaveCriticalSection(&cs);
-
+	
 				switch(browserEvent->eventType) {
 					case Browser::CREATE_VIEW: 
 					{
@@ -154,6 +154,13 @@ protected:
 							
 							WebView *webView = webViews.GetElement(browserEvent->webView);
 							if (webView) {
+								webView->LoadURL(WebURL(WSLit("about:blank")));
+								// fixes a bug in awesomium where if you destroy it while a flash application
+								// is running it may fail when doing in the future.
+								while(webView->IsLoading()) {
+									webCore->Update();
+									Sleep(20);
+								}
 								webView->Destroy();
 								webViews.Remove(browserEvent->webView);
 								webViews.Insert(browserEvent->webView, NULL);

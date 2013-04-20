@@ -27,5 +27,6 @@ static CTSTR localizationStrings[] = {
 	KEY("BrowserHeight"),		L"Browser Height:",
 	KEY("CustomCSS"),			L"Custom CSS",
 	KEY("CustomCSSDesc"),		L"Custom CSS allows you to define a base CSS stylesheet that the"
-								L" loaded website will automatically inherit"
+								L" loaded website will automatically inherit",
+	KEY("IsWrappingAsset"),		L"Wrap the asset in an html body"
 };

@@ -30,11 +30,17 @@ INT_PTR CALLBACK ConfigureDialogProc(HWND hwnd, UINT message, WPARAM wParam, LPA
 			HWND hwndWidth = GetDlgItem(hwnd, IDC_WIDTH);
             HWND hwndHeight = GetDlgItem(hwnd, IDC_HEIGHT);
 			HWND hwndCustomCss = GetDlgItem(hwnd, IDC_CUSTOM_CSS);
+			HWND hwndIsWrappingAsset = GetDlgItem(hwnd, IDC_IS_WRAPPING_ASSET);
+			HWND hwndAssetWrapTemplate = GetDlgItem(hwnd, IDC_ASSET_WRAP_TEMPLATE);
 
 			SendMessage(hwndUrlOrAsset, WM_SETTEXT, 0, (LPARAM)config->url.Array());
 			SendMessage(hwndWidth, WM_SETTEXT, 0, (LPARAM)IntString(config->width).Array());
 			SendMessage(hwndHeight, WM_SETTEXT, 0, (LPARAM)IntString(config->height).Array());
 			SendMessage(hwndCustomCss, WM_SETTEXT, 0, (LPARAM)config->customCss.Array());
+			SendMessage(hwndIsWrappingAsset, BM_SETCHECK, config->isWrappingAsset, 0);
+			SendMessage(hwndAssetWrapTemplate, WM_SETTEXT, 0, (LPARAM)config->assetWrapTemplate.Array());
+
+			SendMessage(hwndAssetWrapTemplate, WM_ENABLE, config->isWrappingAsset, 0);
 
 			return TRUE;
 		}
@@ -42,35 +48,56 @@ INT_PTR CALLBACK ConfigureDialogProc(HWND hwnd, UINT message, WPARAM wParam, LPA
 		{
 			switch(LOWORD(wParam)) 
 			{
+				case IDC_IS_WRAPPING_ASSET:
+				{
+					HWND hwndIsWrappingAsset = GetDlgItem(hwnd, IDC_IS_WRAPPING_ASSET);
+					HWND hwndAssetWrapTemplate = GetDlgItem(hwnd, IDC_ASSET_WRAP_TEMPLATE);
+
+					bool isWrappingAsset = (SendMessage(hwndIsWrappingAsset, BM_GETCHECK, 0, 0) == 1);
+					SendMessage(hwndAssetWrapTemplate, WM_ENABLE, isWrappingAsset, 0);
+					break;
+				}
 				case IDOK:
 				{
 					HWND hwndUrlOrAsset = GetDlgItem(hwnd, IDC_URL_OR_ASSET);
 					HWND hwndWidth = GetDlgItem(hwnd, IDC_WIDTH);
 					HWND hwndHeight = GetDlgItem(hwnd, IDC_HEIGHT);
 					HWND hwndCustomCss = GetDlgItem(hwnd, IDC_CUSTOM_CSS);
-					
+					HWND hwndIsWrappingAsset = GetDlgItem(hwnd, IDC_IS_WRAPPING_ASSET);
+					HWND hwndAssetWrapTemplate = GetDlgItem(hwnd, IDC_ASSET_WRAP_TEMPLATE);
+
 					BrowserSourceConfig *config = (BrowserSourceConfig *)GetWindowLongPtr(hwnd, DWLP_USER);
 
 					String str;
-					str.SetLength((UINT)SendMessage(GetDlgItem(hwnd, IDC_URL_OR_ASSET), WM_GETTEXTLENGTH, 0, 0));
+					str.SetLength((UINT)SendMessage(hwndUrlOrAsset, WM_GETTEXTLENGTH, 0, 0));
                     if(!str.Length()) return TRUE;
-                    SendMessage(GetDlgItem(hwnd, IDC_URL_OR_ASSET), WM_GETTEXT, str.Length()+1, (LPARAM)str.Array());
+                    SendMessage(hwndUrlOrAsset, WM_GETTEXT, str.Length()+1, (LPARAM)str.Array());
 					config->url = str;
 
-					str.SetLength((UINT)SendMessage(GetDlgItem(hwnd, IDC_WIDTH), WM_GETTEXTLENGTH, 0, 0));
+					str.SetLength((UINT)SendMessage(hwndWidth, WM_GETTEXTLENGTH, 0, 0));
                     if(!str.Length()) return TRUE;
-                    SendMessage(GetDlgItem(hwnd, IDC_WIDTH), WM_GETTEXT, str.Length()+1, (LPARAM)str.Array());
+                    SendMessage(hwndWidth, WM_GETTEXT, str.Length()+1, (LPARAM)str.Array());
 					config->width = str.ToInt();
 
-					str.SetLength((UINT)SendMessage(GetDlgItem(hwnd, IDC_HEIGHT), WM_GETTEXTLENGTH, 0, 0));
+					str.SetLength((UINT)SendMessage(hwndHeight, WM_GETTEXTLENGTH, 0, 0));
                     if(!str.Length()) return TRUE;
-                    SendMessage(GetDlgItem(hwnd, IDC_HEIGHT), WM_GETTEXT, str.Length()+1, (LPARAM)str.Array());
+                    SendMessage(hwndHeight, WM_GETTEXT, str.Length()+1, (LPARAM)str.Array());
 					config->height = str.ToInt();
 
-					str.SetLength((UINT)SendMessage(GetDlgItem(hwnd, IDC_CUSTOM_CSS), WM_GETTEXTLENGTH, 0, 0));
+					str.SetLength((UINT)SendMessage(hwndCustomCss, WM_GETTEXTLENGTH, 0, 0));
+                    if(str.Length()) {
+						SendMessage(hwndCustomCss, WM_GETTEXT, str.Length()+1, (LPARAM)str.Array());
+					} else {
+						str.Clear();
+					}
+
+					config->isWrappingAsset = (SendMessage(hwndIsWrappingAsset, BM_GETCHECK, 0, 0) == 1);
+
+					str.SetLength((UINT)SendMessage(hwndAssetWrapTemplate, WM_GETTEXTLENGTH, 0, 0));
                     if(!str.Length()) return TRUE;
-                    SendMessage(GetDlgItem(hwnd, IDC_CUSTOM_CSS), WM_GETTEXT, str.Length()+1, (LPARAM)str.Array());
-					config->customCss = str;
+					SendMessage(hwndAssetWrapTemplate, WM_GETTEXT, str.Length()+1, (LPARAM)str.Array());
+					
+					config->assetWrapTemplate = str;
 
 					EndDialog(hwnd, IDOK);
 					return TRUE;
@@ -167,7 +194,6 @@ BrowserSourcePlugin::~BrowserSourcePlugin()
 
 bool LoadPlugin()
 {
-	LoadLibrary(TEXT("Riched32.dll"));
     if(BrowserSourcePlugin::instance != NULL) {
         return false;
 	}
@@ -197,9 +223,6 @@ void OnStartStream()
 
 void OnStopStream()
 {
-	if (BrowserSourcePlugin::instance == NULL) {
-		return;
-	}
 }
 
 CTSTR GetPluginName()

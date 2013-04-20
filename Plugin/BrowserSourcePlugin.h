@@ -21,6 +21,8 @@ public:
 	UINT width;
 	UINT height;
 	String customCss;
+	bool isWrappingAsset;
+	String assetWrapTemplate;
 
 	BrowserSourceConfig(XElement *element)
 	{
@@ -33,7 +35,28 @@ public:
 		url = TEXT("http://www.obsproject.com");
 		width = 640;
 		height = 480;
-		customCss = TEXT("::-webkit-scrollbar { visibility: hidden; }\nbody { background-color: rgba(0, 0, 0, 0); }");
+		customCss = TEXT("::-webkit-scrollbar { visibility: hidden; }\r\nbody { background-color: rgba(0, 0, 0, 0); }");
+		isWrappingAsset = false;
+		assetWrapTemplate =
+			L"<html>\r\n"
+			L"  <head></head>\r\n"
+			L"  <body>\r\n"
+			L"    <object width='$(WIDTH)' height='$(HEIGHT)'>\r\n"
+			L"      <param name='movie' value='$(FILE)'></param>\r\n"
+			L"      <param name='allowscriptaccess' value='always'></param>\r\n"
+			L"      <param name='wmode' value='transparent'></param>\r\n"
+			L"      <embed \r\n"
+			L"        src='$(FILE)' \r\n"
+			L"        type='application/x-shockwave-flash' \r\n"
+			L"        allowscriptaccess='always' \r\n"
+			L"        width='$(WIDTH)' \r\n"
+			L"        height='$(HEIGHT)' \r\n"
+			L"        wmode='transparent'>\r\n"
+			L"      </embed>\r\n"
+			L"    </object>\r\n"
+			L"  </body>\r\n"
+			L"</html>\r\n";
+
 	}
 
 	void Reload()
@@ -42,6 +65,8 @@ public:
 		width = element->GetInt(TEXT("width"));
 		height = element->GetInt(TEXT("height"));
 		customCss = element->GetString(TEXT("css"));
+		isWrappingAsset = (element->GetInt(TEXT("isWrappingAsset")) == 1);
+		assetWrapTemplate = element->GetString(TEXT("assetWrapTemplate"));
 	}
 
 	void Save()
@@ -50,6 +75,8 @@ public:
 		element->SetInt(TEXT("width"), width);
 		element->SetInt(TEXT("height"), height);
 		element->SetString(TEXT("css"), customCss);
+		element->SetInt(TEXT("isWrappingAsset"), (isWrappingAsset == 1) ? 1 : 0);
+		element->SetString(TEXT("assetWrapTemplate"), assetWrapTemplate);
 	}
 };
 
