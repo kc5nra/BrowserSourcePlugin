@@ -122,7 +122,7 @@ INT_PTR CALLBACK ConfigureDialogProc(HWND hwnd, UINT message, WPARAM wParam, LPA
 
 ImageSource* STDCALL CreateBrowserSource(XElement *data)
 {
-	return new BrowserSource(data); 
+	return new BrowserSource(data);
 }
 
 bool STDCALL ConfigureBrowserSource(XElement *element, bool bCreating)
@@ -158,9 +158,7 @@ BrowserSourcePlugin::BrowserSourcePlugin()
 {
 	isDynamicLocale = false;
 	settings = NULL;
-
 	browserManager = new BrowserManager();
-
 	if (!locale->HasLookup(KEY("PluginName"))) {
 		isDynamicLocale = true;
 		int localizationStringCount = sizeof(localizationStrings) / sizeof(CTSTR);
@@ -174,6 +172,7 @@ BrowserSourcePlugin::BrowserSourcePlugin()
 	}
 
 	API->RegisterImageSourceClass(BROWSER_SOURCE_CLASS, STR("ClassName"), (OBSCREATEPROC)CreateBrowserSource, (OBSCONFIGPROC)ConfigureBrowserSource);
+
 }
 
 BrowserSourcePlugin::~BrowserSourcePlugin() 
@@ -183,12 +182,11 @@ BrowserSourcePlugin::~BrowserSourcePlugin()
 
 	if (isDynamicLocale) {
 		int localizationStringCount = sizeof(localizationStrings) / sizeof(CTSTR);
-		Log(TEXT("Server Ping plugin instance deleted; removing dynamically loaded localization strings"));
+		Log(TEXT("Browser Source plugin instance deleted; removing dynamically loaded localization strings"));
 		for(int i = 0; i < localizationStringCount; i += 2) {
 			locale->RemoveLookupString(localizationStrings[i]);
 		}
 	}
-
 	isDynamicLocale = false;
 }
 

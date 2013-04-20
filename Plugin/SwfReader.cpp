@@ -16,20 +16,20 @@ SwfReader::SwfReader(unsigned char* buffer, size_t bufferSize)
 	f3 = buffer[2];
 	version = buffer[3];
 
-	fileSize = le4CharToInt(buffer+4);
+	fileSize = LE4CHAR_TO_INT(buffer+4);
 	
 	if(f1 == 'C') {
-		unsigned char* data = inflateBuffer(buffer+8, bufferSize-8);
+		unsigned char* data = InflateBuffer(buffer+8, bufferSize-8);
 		if (!error) {
-			extractDimensions(data);
+			ExtractDimensions(data);
 		}
 		free(data);
 	} else {
-		extractDimensions(buffer+8);
+		ExtractDimensions(buffer+8);
 	}
 }
 
-unsigned char* SwfReader::inflateBuffer(unsigned char* data, size_t size)
+unsigned char* SwfReader::InflateBuffer(unsigned char* data, size_t size)
 {
 	unsigned char* result = (unsigned char*) malloc(sizeof(unsigned char*) * fileSize);
 	
@@ -74,7 +74,7 @@ unsigned char* SwfReader::inflateBuffer(unsigned char* data, size_t size)
 	return result;
 }
 
-int SwfReader::extractDimensions(const unsigned char* data)
+int SwfReader::ExtractDimensions(const unsigned char* data)
 {
 	unsigned char nbits = data[0];
 	unsigned int size = nbits >> 3;
@@ -113,27 +113,27 @@ int SwfReader::extractDimensions(const unsigned char* data)
 	return 0;
 }
 
-int SwfReader::getWidth()
+int SwfReader::GetWidth()
 {
 	return width;
 }
 
-int SwfReader::getHeight()
+int SwfReader::GetHeight()
 {
 	return height;
 }
 
-int SwfReader::getVersion()
+int SwfReader::GetVersion()
 {
 	return version;
 }
 
-int SwfReader::getFileSize()
+int SwfReader::GetFileSize()
 {
 	return fileSize;
 }
 
-bool SwfReader::hasError() {
+bool SwfReader::HasError() {
 	return error;
 }
 

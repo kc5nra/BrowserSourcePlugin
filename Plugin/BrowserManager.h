@@ -83,7 +83,8 @@ public:
 
 	~BrowserManager() 
 	{
-		AddEvent(new Browser::Event(Browser::CLEANUP, NULL));
+		Browser::Event cleanup = Browser::Event(Browser::CLEANUP, NULL);
+		AddEvent(&cleanup);
 		while(isStarted) {
 			Sleep(10);
 		}
@@ -197,7 +198,6 @@ protected:
 						webCore->Shutdown();
 						
 						browserEvent->Complete();
-						delete browserEvent;
 						isStarted = false;
 						return;
 					}

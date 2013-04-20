@@ -1,6 +1,10 @@
+#pragma once
+
 #include <zlib.h>
 #include <Windows.h>
 #define BUFFER_SIZE 4096
+
+#define LE4CHAR_TO_INT(_in) (0 + ((_in)[3] << 8*3) + ((_in)[2] << 8*2) + ((_in)[1] << 8) + (_in)[0])
 
 class SwfReader
 {
@@ -17,21 +21,17 @@ private:
 	bool error;
 	
 protected:
-	unsigned char* inflateBuffer(unsigned char* data, size_t size);
-	int extractDimensions(const unsigned char* data);
+	unsigned char* InflateBuffer(unsigned char* data, size_t size);
+	int ExtractDimensions(const unsigned char* data);
 		
 public:
 	SwfReader(unsigned char* buffer, size_t bufferSize = BUFFER_SIZE);
 		
 public:
-	int getWidth();
-	int getHeight();
-	int getVersion();
-	int getFileSize();
-	bool hasError();
-		
-protected:
-	__inline int le4CharToInt(const unsigned char* _in) {
-		return 0 + (_in[3] << 8*3) + (_in[2] << 8*2) + (_in[1] << 8) + _in[0];
-	}
+	int GetWidth();
+	int GetHeight();
+	int GetVersion();
+	int GetFileSize();
+	bool HasError();
+
 };

@@ -182,7 +182,7 @@ WebView *BrowserSource::CreateWebViewCallback(WebCore *webCore, const int hWebVi
 	WebPreferences webPreferences;
 	WebString webString = WebString((const wchar16 *)config->customCss.Array());
 	webPreferences.user_stylesheet = webString;
-	
+	webPreferences.enable_web_gl = true;
 	WebSession *webSession;
 	webSession = webCore->CreateWebSession(WSLit("plugins\\BrowserSourcePlugin\\cache"), webPreferences);
 	
