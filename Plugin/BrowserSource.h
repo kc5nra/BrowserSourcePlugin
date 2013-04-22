@@ -5,6 +5,8 @@
 
 #include "OBSApi.h"
 
+#include "KeyboardManager.h"
+
 namespace Awesomium {
 	class WebCore;
 	class WebSession;
@@ -12,6 +14,7 @@ namespace Awesomium {
 }
 
 class BrowserDataSource;
+
 struct BrowserSourceConfig;
 
 class BrowserSource : public ImageSource
@@ -26,20 +29,23 @@ private:
 	Texture *texture;
 	int id;
 	int hWebView;
+	
 	BrowserDataSource *browserDataSource;
 	BrowserSourceConfig *config;
 
 	CRITICAL_SECTION textureLock;
 
 public:
-    void Tick(float fSeconds);
+    // ImageSource
+	void Tick(float fSeconds);
     void Render(const Vect2 &pos, const Vect2 &size);
     void UpdateSettings();
     Vect2 GetSize() const;
-
 
 // callbacks
 public:
 	Awesomium::WebView *CreateWebViewCallback(Awesomium::WebCore *webCore, const int hWebView);
 	void UpdateCallback(Awesomium::WebView *webView);
+	
+	
 };

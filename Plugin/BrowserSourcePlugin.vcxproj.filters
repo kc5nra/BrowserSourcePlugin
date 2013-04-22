@@ -1,0 +1,43 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="BrowserSource.cpp" />
+    <ClCompile Include="BrowserSourcePlugin.cpp" />
+    <ClCompile Include="SwfReader.cpp" />
+    <ClCompile Include="KeyboardManager.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="SwfReader.h" />
+    <ClInclude Include="BrowserManager.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="BrowserSource.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="BrowserSourcePlugin.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Localization.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="KeyboardManager.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Headers">
+      <UniqueIdentifier>{a2e6bc78-3c7e-45de-8a80-a74bdcef1b83}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resources">
+      <UniqueIdentifier>{eaab4fe5-9b27-442c-8663-4d24313a0f10}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="BrowserSourcePlugin.rc">
+      <Filter>Resources</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>

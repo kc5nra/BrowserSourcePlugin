@@ -12,6 +12,7 @@
 #include <Awesomium\STLHelpers.h>
 #include <Awesomium\BitmapSurface.h>
 #include <Awesomium\DataPak.h>
+#include <Awesomium\JSValue.h>
 
 using namespace Awesomium;
 
@@ -37,7 +38,7 @@ private:
 	int swfWidth;
 	int swfHeight;
 
-	List<FileMimeType> mimeTypes;
+	List<FileMimeType *> mimeTypes;
 
 public:
 	BrowserDataSource(bool isWrappingAsset, const String &assetWrapTemplate, int swfWidth, int swfHeight) 
@@ -48,7 +49,12 @@ public:
 		this->swfHeight = swfHeight;
 	}
 
-	virtual ~BrowserDataSource() { }
+	virtual ~BrowserDataSource() 
+	{
+		for(UINT i = 0; i < mimeTypes.Num(); i++) {
+			delete mimeTypes[i];
+		}
+	}
 	
 public:
 	virtual void OnRequest(int request_id, const WebString& path) {
@@ -68,18 +74,19 @@ public:
 			lpFileDataUTF8[dwFileSize] = 0;
 			file.Read(lpFileDataUTF8, dwFileSize);
 		} else {
-			Log(TEXT("BrowserDataSource::OnRequest: could not open specified file %s (invalid file name or access violation)"), buffer);
+			Log(TEXT("BrowserDataSource::OnRequest: could not open specified file %s (invalid file name or access violation)"), filePath);
 		}
 
 		String mimeType = TEXT("text/html");
 
 		for(UINT i = 0; i < mimeTypes.Num(); i++) {
-			FileMimeType &fileMimeType = mimeTypes.GetElement(i);
-			if (fileMimeType.fileType.Length() > filePath.Length()) {
+			FileMimeType *fileMimeType = mimeTypes.GetElement(i);
+			if (fileMimeType->fileType.Length() > filePath.Length()) {
 				continue;
 			}
-			if (filePath.Right(filePath.Length() - fileMimeType.fileType.Length()).CompareI(fileMimeType.fileType)) {
-				mimeType = fileMimeType.mimeType;
+			String extractedType = filePath.Right(fileMimeType->fileType.Length());
+			if (extractedType.CompareI(fileMimeType->fileType)) {
+				mimeType = fileMimeType->mimeType;
 				break;
 			}
 		}
@@ -106,9 +113,9 @@ public:
 			// is pretty small.
 
 			//SwfReader swfReader((unsigned char *)lpFileDataUTF8);
-			//if (!swfReader.hasError()) {
-			//	swfWidth = swfReader.getWidth();
-			//	swfHeight = swfReader.getHeight();
+			//if (!swfReader.HasError()) {
+			//	swfWidth = swfReader.GetWidth();
+			//	swfHeight = swfReader.GetHeight();
 			//}
 
 			assetWrapTemplate.FindReplace(TEXT("$(WIDTH)"), IntString(swfWidth));
@@ -138,7 +145,7 @@ public:
 	}
 
 	void AddMimeType(const String &fileType, const String &mimeType) {
-		mimeTypes.Add(FileMimeType(fileType, mimeType));
+		mimeTypes.Add(new FileMimeType(fileType, mimeType));
 	}
 };
 
@@ -158,9 +165,10 @@ BrowserSource::BrowserSource(XElement *data)
 
 BrowserSource::~BrowserSource()
 {
-
+	BrowserManager *browserManager = BrowserSourcePlugin::instance->GetBrowserManager();
+	
 	if (hWebView >= 0) {
-		BrowserSourcePlugin::instance->GetBrowserManager()->ShutdownAndWait(hWebView);
+		browserManager->ShutdownAndWait(hWebView);
 	}
 
 	EnterCriticalSection(&textureLock);
@@ -189,7 +197,11 @@ WebView *BrowserSource::CreateWebViewCallback(WebCore *webCore, const int hWebVi
 	if (browserDataSource) {
 		delete browserDataSource;
 	}
+
 	browserDataSource = new BrowserDataSource(config->isWrappingAsset, config->assetWrapTemplate, config->width, config->height);
+	browserDataSource->AddMimeType(TEXT(".jpg"), TEXT("image/jpg"));
+	browserDataSource->AddMimeType(TEXT(".jpeg"), TEXT("image/jpeg"));
+
 	webSession->AddDataSource(WSLit("local"), browserDataSource);
 
 	WebView *webView;
@@ -216,6 +228,9 @@ WebView *BrowserSource::CreateWebViewCallback(WebCore *webCore, const int hWebVi
 	return webView;
 }
 
+
+
+
 void BrowserSource::UpdateCallback(WebView *webView)
 {
 	BitmapSurface *surface = (BitmapSurface *)webView->surface();
@@ -225,6 +240,7 @@ void BrowserSource::UpdateCallback(WebView *webView)
 		texture->SetImage((void *)surface->buffer(), GS_IMAGEFORMAT_BGRA, surface->row_span());
 	}
 	LeaveCriticalSection(&textureLock);
+
 }
 
 void BrowserSource::Render(const Vect2 &pos, const Vect2 &size)

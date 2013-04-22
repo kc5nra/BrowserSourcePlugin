@@ -8,12 +8,170 @@
 #include "BrowserSource.h"
 #include "resource.h"
 
+#include "Scintilla.h"
+#include "SciLexer.h"
 #include <Awesomium\WebCore.h>
+
+
 
 HINSTANCE BrowserSourcePlugin::hinstDLL = NULL;
 BrowserSourcePlugin *BrowserSourcePlugin::instance = NULL;
 
 #define BROWSER_SOURCE_CLASS TEXT("BrowserSource")
+
+
+LRESULT SendEditor(HWND editor, UINT Msg, WPARAM wParam=0, LPARAM lParam=0) {
+	return SendMessage(editor, Msg, wParam, lParam);
+}
+
+const COLORREF black = RGB(0, 0, 0);
+const COLORREF white = RGB(0xFF, 0xFF, 0xFF);
+
+void SetAStyle(HWND editor, int style, COLORREF fore, COLORREF back=white, int size=-1, const char *face = 0) {
+	SendEditor(editor, SCI_STYLESETFORE, style, fore);
+	SendEditor(editor, SCI_STYLESETBACK, style, back);
+	if (size >= 1) {
+		SendEditor(editor, SCI_STYLESETSIZE, style, size);
+	}
+	if (face) {
+		SendEditor(editor, SCI_STYLESETFONT, style, reinterpret_cast<LPARAM>(face));
+	}
+}
+
+const char htmlKeyWords[] = 
+	"a abbr acronym address applet area b base basefont "
+	"bdo big blockquote body br button caption center "
+	"cite code col colgroup dd del dfn dir div dl dt em "
+	"fieldset font form frame frameset h1 h2 h3 h4 h5 h6 "
+	"head hr html i iframe img input ins isindex kbd label "
+	"legend li link map menu meta noframes noscript "
+	"object ol optgroup option p param pre q s samp "
+	"script select small span strike strong style sub sup "
+	"table tbody td textarea tfoot th thead title tr tt u ul "
+	"var xmlns "
+	"abbr accept-charset accept accesskey action align alink "
+	"alt archive axis background bgcolor border "
+	"cellpadding cellspacing char charoff charset checked cite "
+	"class classid clear codebase codetype color cols colspan "
+	"compact content coords "
+	"data datafld dataformatas datapagesize datasrc datetime "
+	"declare defer dir disabled enctype "
+	"face for frame frameborder "
+	"headers height href hreflang hspace http-equiv "
+	"id ismap label lang language link longdesc "
+	"marginwidth marginheight maxlength media method multiple "
+	"name nohref noresize noshade nowrap "
+	"object onblur onchange onclick ondblclick onfocus "
+	"onkeydown onkeypress onkeyup onload onmousedown "
+	"onmousemove onmouseover onmouseout onmouseup "
+	"onreset onselect onsubmit onunload "
+	"profile prompt readonly rel rev rows rowspan rules "
+	"scheme scope shape size span src standby start style "
+	"summary tabindex target text title type usemap "
+	"valign value valuetype version vlink vspace width "
+	"text password checkbox radio submit reset "
+	"file hidden image "
+	"public !doctype xml "
+	"embed allowscriptaccess wmode";
+
+const char jsKeyWords[] = 
+	"break case catch continue default "
+	"do else for function if return throw try var while";
+
+
+void InitializeEditor(HWND editor) {
+	SendEditor(editor, SCI_SETLEXER, SCLEX_HTML);
+	SendEditor(editor, SCI_SETSTYLEBITS, 7);
+	SendEditor(editor, SCI_SETTABWIDTH, 2);
+	SendEditor(editor, SCI_SETTABINDENTS, 2);
+	
+	SendEditor(editor, SCI_SETKEYWORDS, 0, 
+		reinterpret_cast<LPARAM>(htmlKeyWords));
+	SendEditor(editor, SCI_SETKEYWORDS, 1, 
+		reinterpret_cast<LPARAM>(jsKeyWords));
+
+	const COLORREF red = RGB(0xFF, 0, 0);
+	const COLORREF offWhite = RGB(0xFF, 0xFB, 0xF0);
+	const COLORREF darkGreen = RGB(0, 0x80, 0);
+	const COLORREF darkBlue = RGB(0, 0, 0x80);
+
+	
+	// Unknown tags and attributes are highlighed in red. 
+	// If a tag is actually OK, it should be added in lower case to the htmlKeyWords string.
+	SetAStyle(editor, SCE_H_TAG, darkBlue);
+	SetAStyle(editor, SCE_H_TAGUNKNOWN, red);
+	SetAStyle(editor, SCE_H_ATTRIBUTE, darkBlue);
+	SetAStyle(editor, SCE_H_ATTRIBUTEUNKNOWN, red);
+	SetAStyle(editor, SCE_H_NUMBER, RGB(0x80,0,0x80));
+	SetAStyle(editor, SCE_H_DOUBLESTRING, RGB(0,0x80,0));
+	SetAStyle(editor, SCE_H_SINGLESTRING, RGB(0,0x80,0));
+	SetAStyle(editor, SCE_H_OTHER, RGB(0x80,0,0x80));
+	SetAStyle(editor, SCE_H_COMMENT, RGB(0x80,0x80,0));
+	SetAStyle(editor, SCE_H_ENTITY, RGB(0x80,0,0x80));
+
+	SetAStyle(editor, SCE_H_TAGEND, darkBlue);
+	SetAStyle(editor, SCE_H_XMLSTART, darkBlue);	// <?
+	SetAStyle(editor, SCE_H_XMLEND, darkBlue);		// ?>
+	SetAStyle(editor, SCE_H_SCRIPT, darkBlue);		// <script
+	SetAStyle(editor, SCE_H_ASP, RGB(0x4F, 0x4F, 0), RGB(0xFF, 0xFF, 0));	// <% ... %>
+	SetAStyle(editor, SCE_H_ASPAT, RGB(0x4F, 0x4F, 0), RGB(0xFF, 0xFF, 0));	// <%@ ... %>
+
+	SetAStyle(editor, SCE_HB_DEFAULT, black);
+	SetAStyle(editor, SCE_HB_COMMENTLINE, darkGreen);
+	SetAStyle(editor, SCE_HB_NUMBER, RGB(0,0x80,0x80));
+	SetAStyle(editor, SCE_HB_WORD, darkBlue);
+	SendEditor(editor, SCI_STYLESETBOLD, SCE_HB_WORD, 1);
+	SetAStyle(editor, SCE_HB_STRING, RGB(0x80,0,0x80));
+	SetAStyle(editor, SCE_HB_IDENTIFIER, black);
+	
+		
+	// If there is no need to support embedded Javascript, the following code can be dropped.
+	// Javascript will still be correctly processed but will be displayed in just the default style.
+	
+	SetAStyle(editor, SCE_HJ_START, RGB(0x80,0x80,0));
+	SetAStyle(editor, SCE_HJ_DEFAULT, black);
+	SetAStyle(editor, SCE_HJ_COMMENT, darkGreen);
+	SetAStyle(editor, SCE_HJ_COMMENTLINE, darkGreen);
+	SetAStyle(editor, SCE_HJ_COMMENTDOC, darkGreen);
+	SetAStyle(editor, SCE_HJ_NUMBER, RGB(0,0x80,0x80));
+	SetAStyle(editor, SCE_HJ_WORD, black);
+	SetAStyle(editor, SCE_HJ_KEYWORD, darkBlue);
+	SetAStyle(editor, SCE_HJ_DOUBLESTRING, RGB(0x80,0,0x80));
+	SetAStyle(editor, SCE_HJ_SINGLESTRING, RGB(0x80,0,0x80));
+	SetAStyle(editor, SCE_HJ_SYMBOLS, black);
+
+	SetAStyle(editor, SCE_HJA_START, RGB(0x80,0x80,0));
+	SetAStyle(editor, SCE_HJA_DEFAULT, black);
+	SetAStyle(editor, SCE_HJA_COMMENT, darkGreen);
+	SetAStyle(editor, SCE_HJA_COMMENTLINE, darkGreen);
+	SetAStyle(editor, SCE_HJA_COMMENTDOC, darkGreen);
+	SetAStyle(editor, SCE_HJA_NUMBER, RGB(0,0x80,0x80));
+	SetAStyle(editor, SCE_HJA_WORD, black);
+	SetAStyle(editor, SCE_HJA_KEYWORD, darkBlue);
+	SetAStyle(editor, SCE_HJA_DOUBLESTRING, RGB(0x80,0,0x80));
+	SetAStyle(editor, SCE_HJA_SINGLESTRING, RGB(0x80,0,0x80));
+	SetAStyle(editor, SCE_HJA_SYMBOLS, black);
+
+	// Show the whole section of Javascript with off white background
+	for (int jstyle=SCE_HJ_DEFAULT; jstyle<=SCE_HJ_SYMBOLS; jstyle++) {
+		SendEditor(editor, SCI_STYLESETBACK, jstyle, offWhite);
+		SendEditor(editor, SCI_STYLESETEOLFILLED, jstyle, 1);
+	}
+	SendEditor(editor, SCI_STYLESETBACK, SCE_HJ_STRINGEOL, RGB(0xDF, 0xDF, 0x7F));
+	SendEditor(editor, SCI_STYLESETEOLFILLED, SCE_HJ_STRINGEOL, 1);
+
+	// Show the whole section of Javascript with brown background
+	for (int jastyle=SCE_HJA_DEFAULT; jastyle<=SCE_HJA_SYMBOLS; jastyle++) {
+		SendEditor(editor, SCI_STYLESETBACK, jastyle, RGB(0xDF, 0xDF, 0x7F));
+		SendEditor(editor, SCI_STYLESETEOLFILLED, jastyle, 1);
+	}
+	SendEditor(editor, SCI_STYLESETBACK, SCE_HJA_STRINGEOL, RGB(0x0,0xAF,0x5F));
+	SendEditor(editor, SCI_STYLESETEOLFILLED, SCE_HJA_STRINGEOL, 1);
+
+	
+
+	ShowWindow(editor, SW_SHOW);
+}
 
 INT_PTR CALLBACK ConfigureDialogProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -24,6 +182,19 @@ INT_PTR CALLBACK ConfigureDialogProc(HWND hwnd, UINT message, WPARAM wParam, LPA
 			SetWindowLongPtr(hwnd, DWLP_USER, (LONG_PTR)lParam);
 			BrowserSourceConfig *config = (BrowserSourceConfig *)lParam;
 
+			config->hwndAssetWrapTemplateEditor = ::CreateWindow(
+				TEXT("Scintilla"),
+				TEXT("Source"),
+				WS_CHILD | WS_VSCROLL | WS_HSCROLL | WS_CLIPCHILDREN | WS_BORDER,
+				420, 50,
+				375, 345,
+				hwnd,
+				0,
+				BrowserSourcePlugin::hinstDLL,
+				0);
+
+			InitializeEditor(config->hwndAssetWrapTemplateEditor);
+
 			LocalizeWindow(hwnd);
 
 			HWND hwndUrlOrAsset = GetDlgItem(hwnd, IDC_URL_OR_ASSET);
@@ -31,16 +202,17 @@ INT_PTR CALLBACK ConfigureDialogProc(HWND hwnd, UINT message, WPARAM wParam, LPA
             HWND hwndHeight = GetDlgItem(hwnd, IDC_HEIGHT);
 			HWND hwndCustomCss = GetDlgItem(hwnd, IDC_CUSTOM_CSS);
 			HWND hwndIsWrappingAsset = GetDlgItem(hwnd, IDC_IS_WRAPPING_ASSET);
-			HWND hwndAssetWrapTemplate = GetDlgItem(hwnd, IDC_ASSET_WRAP_TEMPLATE);
+			HWND hwndAssetWrapTemplate = config->hwndAssetWrapTemplateEditor;
 
 			SendMessage(hwndUrlOrAsset, WM_SETTEXT, 0, (LPARAM)config->url.Array());
 			SendMessage(hwndWidth, WM_SETTEXT, 0, (LPARAM)IntString(config->width).Array());
 			SendMessage(hwndHeight, WM_SETTEXT, 0, (LPARAM)IntString(config->height).Array());
 			SendMessage(hwndCustomCss, WM_SETTEXT, 0, (LPARAM)config->customCss.Array());
 			SendMessage(hwndIsWrappingAsset, BM_SETCHECK, config->isWrappingAsset, 0);
-			SendMessage(hwndAssetWrapTemplate, WM_SETTEXT, 0, (LPARAM)config->assetWrapTemplate.Array());
-
-			SendMessage(hwndAssetWrapTemplate, WM_ENABLE, config->isWrappingAsset, 0);
+			char *utf8String = config->assetWrapTemplate.CreateUTF8String();
+			SendEditor(hwndAssetWrapTemplate, SCI_ADDTEXT, config->assetWrapTemplate.Length(), (LPARAM)utf8String);
+			Free(utf8String);
+			SendEditor(hwndAssetWrapTemplate, SCI_SETREADONLY, !config->isWrappingAsset, 0);
 
 			return TRUE;
 		}
@@ -50,23 +222,24 @@ INT_PTR CALLBACK ConfigureDialogProc(HWND hwnd, UINT message, WPARAM wParam, LPA
 			{
 				case IDC_IS_WRAPPING_ASSET:
 				{
+					BrowserSourceConfig *config = (BrowserSourceConfig *)GetWindowLongPtr(hwnd, DWLP_USER);
 					HWND hwndIsWrappingAsset = GetDlgItem(hwnd, IDC_IS_WRAPPING_ASSET);
-					HWND hwndAssetWrapTemplate = GetDlgItem(hwnd, IDC_ASSET_WRAP_TEMPLATE);
+					HWND hwndAssetWrapTemplate = config->hwndAssetWrapTemplateEditor;
 
 					bool isWrappingAsset = (SendMessage(hwndIsWrappingAsset, BM_GETCHECK, 0, 0) == 1);
-					SendMessage(hwndAssetWrapTemplate, WM_ENABLE, isWrappingAsset, 0);
-					break;
+					SendEditor(hwndAssetWrapTemplate, SCI_SETREADONLY, !isWrappingAsset, 0);
+					return TRUE;
 				}
 				case IDOK:
 				{
+					BrowserSourceConfig *config = (BrowserSourceConfig *)GetWindowLongPtr(hwnd, DWLP_USER);
+
 					HWND hwndUrlOrAsset = GetDlgItem(hwnd, IDC_URL_OR_ASSET);
 					HWND hwndWidth = GetDlgItem(hwnd, IDC_WIDTH);
 					HWND hwndHeight = GetDlgItem(hwnd, IDC_HEIGHT);
 					HWND hwndCustomCss = GetDlgItem(hwnd, IDC_CUSTOM_CSS);
 					HWND hwndIsWrappingAsset = GetDlgItem(hwnd, IDC_IS_WRAPPING_ASSET);
-					HWND hwndAssetWrapTemplate = GetDlgItem(hwnd, IDC_ASSET_WRAP_TEMPLATE);
-
-					BrowserSourceConfig *config = (BrowserSourceConfig *)GetWindowLongPtr(hwnd, DWLP_USER);
+					HWND hwndAssetWrapTemplate = config->hwndAssetWrapTemplateEditor;
 
 					String str;
 					str.SetLength((UINT)SendMessage(hwndUrlOrAsset, WM_GETTEXTLENGTH, 0, 0));
@@ -93,9 +266,15 @@ INT_PTR CALLBACK ConfigureDialogProc(HWND hwnd, UINT message, WPARAM wParam, LPA
 
 					config->isWrappingAsset = (SendMessage(hwndIsWrappingAsset, BM_GETCHECK, 0, 0) == 1);
 
-					str.SetLength((UINT)SendMessage(hwndAssetWrapTemplate, WM_GETTEXTLENGTH, 0, 0));
-                    if(!str.Length()) return TRUE;
-					SendMessage(hwndAssetWrapTemplate, WM_GETTEXT, str.Length()+1, (LPARAM)str.Array());
+					UINT length = (UINT)SendEditor(hwndAssetWrapTemplate, SCI_GETTEXTLENGTH);
+
+					char *utf8String = (char *)Allocate(length + 1);
+					utf8String[length] = 0;
+					SendMessage(hwndAssetWrapTemplate, SCI_GETTEXT, length + 1, (LPARAM)utf8String);
+					TSTR tstr = utf8_createTstr(utf8String);
+					str = tstr;
+					Free(tstr);
+					Free(utf8String);
 					
 					config->assetWrapTemplate = str;
 
@@ -196,6 +375,7 @@ bool LoadPlugin()
         return false;
 	}
     BrowserSourcePlugin::instance = new BrowserSourcePlugin();
+
     return true;
 }
 
@@ -233,9 +413,13 @@ CTSTR GetPluginDescription()
     return STR("PluginDescription");
 }
 
+
+
 BOOL CALLBACK DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
-    if(fdwReason == DLL_PROCESS_ATTACH)
+    if(fdwReason == DLL_PROCESS_ATTACH) {
         BrowserSourcePlugin::hinstDLL = hinstDLL;
+	}
+		
     return TRUE;
 }

@@ -1,8 +1,12 @@
+/**
+ * John Bradley (jrb@turrettech.com)
+ */
 #pragma once
 
 #include <windows.h>
 #include "OBSApi.h"
 #include "BrowserSource.h"
+#include "KeyboardManager.h"
 
 #include <Awesomium\WebCore.h>
 #include <Awesomium\WebView.h>
@@ -78,26 +82,50 @@ public:
 		generalUpdate = new Browser::Event(Browser::UPDATE, NULL);
 		webCore = 0;
 
+		keyboardManager = new KeyboardManager();
 		updateEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+
+
 	}
 
 	~BrowserManager() 
 	{
+		
+
 		Browser::Event cleanup = Browser::Event(Browser::CLEANUP, NULL);
 		AddEvent(&cleanup);
 		while(isStarted) {
 			Sleep(10);
 		}
+
+		delete keyboardManager;
 		delete generalUpdate;
 	}
 
+	
+private:
+	WebCore *webCore;
+	KeyboardManager *keyboardManager;
+
+	CRITICAL_SECTION cs;
+
+	List<WebView *> webViews;
+	List<Browser::Event *> pendingEvents;
+	Browser::Event *generalUpdate;
+	
+	bool isStarted;
+	HANDLE threadHandle;
+	HANDLE updateEvent;
 
 protected:
 	// this method should never be called directly
     void BrowserManagerEntry() 
 	{
 		WebConfig webConfig = WebConfig();
+		webConfig.remote_debugging_port = 1337;
+		webConfig.log_level = kLogLevel_Verbose;
 		webCore = WebCore::Initialize(webConfig);
+
 		UINT maxFps = API->GetMaxFPS();
 
 		for(;;) {
@@ -211,17 +239,6 @@ protected:
     }
 
 
-private:
-	WebCore *webCore;
-	CRITICAL_SECTION cs;
-
-	List<WebView *> webViews;
-	List<Browser::Event *> pendingEvents;
-	Browser::Event *generalUpdate;
-	
-	bool isStarted;
-	HANDLE threadHandle;
-	HANDLE updateEvent;
 
 public:
     void Startup() 
@@ -261,5 +278,9 @@ public:
 		return webCore;
 	}
 
+	KeyboardManager *GetKeyboardManager()
+	{
+		return keyboardManager;
+	}
 
 };

@@ -24,6 +24,9 @@ public:
 	bool isWrappingAsset;
 	String assetWrapTemplate;
 
+public:  // transient data, only rely on this if you know what you are doing
+	HWND hwndAssetWrapTemplateEditor;
+
 	BrowserSourceConfig(XElement *element)
 	{
 		this->element = element;

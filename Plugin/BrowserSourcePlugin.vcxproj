@@ -14,6 +14,7 @@
     <ClInclude Include="BrowserManager.h" />
     <ClInclude Include="BrowserSource.h" />
     <ClInclude Include="BrowserSourcePlugin.h" />
+    <ClInclude Include="KeyboardManager.h" />
     <ClInclude Include="Localization.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="SwfReader.h" />
@@ -21,6 +22,7 @@
   <ItemGroup>
     <ClCompile Include="BrowserSource.cpp" />
     <ClCompile Include="BrowserSourcePlugin.cpp" />
+    <ClCompile Include="KeyboardManager.cpp" />
     <ClCompile Include="SwfReader.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -88,7 +90,7 @@
       <PreprocessToFile>false</PreprocessToFile>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>zdll.lib;OBSApi.lib;awesomium.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Scintilla.lib;SciLexer.lib;zdll.lib;OBSApi.lib;awesomium.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(ProjectDir)lib;$(SolutionDir)..\OBS\OBSApi\Debug;%(AdditionalLibraryDirectories);$(AWE_DIR)build\lib</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(SolutionDir)..\OBS\rundir\pdb32\$(TargetName).pdb</ProgramDatabaseFile>
