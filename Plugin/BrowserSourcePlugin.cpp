@@ -79,7 +79,7 @@ const char jsKeyWords[] =
 	"do else for function if return throw try var while";
 
 
-void InitializeEditor(HWND editor) {
+void InitializeAssetWrapTemplateEditor(HWND editor) {
 	SendEditor(editor, SCI_SETLEXER, SCLEX_HTML);
 	SendEditor(editor, SCI_SETSTYLEBITS, 7);
 	SendEditor(editor, SCI_SETTABWIDTH, 2);
@@ -173,6 +173,132 @@ void InitializeEditor(HWND editor) {
 	ShowWindow(editor, SW_SHOW);
 }
 
+
+// CSS 1 properties
+char *css1prots =
+    "background background-attachment background-color background-image background-position background-repeat border border-bottom "
+    "border-bottom-width border-color border-left border-left-width border-right border-right-width border-style border-top "
+    "border-top-width border-width clear color display float font font-family "
+    "font-size font-style font-variant font-weight height letter-spacing line-height list-style "
+    "list-style-image list-style-position list-style-type margin margin-bottom margin-left margin-right margin-top "
+    "padding padding-bottom padding-left padding-right padding-top text-align text-decoration text-indent "
+    "text-transform vertical-align white-space width word-spacing";
+
+char *pseudoClasses =
+    "active after before checked current disabled empty enabled "
+    "first-child first-letter first-line first-of-type focus hover lang last-of-type "
+    "link not nth-child nth-last-child nth-last-of-type nth-of-type only-child only-of-type "
+    "root target visited";
+
+// CSS 2 properties
+char *css2prots =
+    "azimuth border-bottom-color border-bottom-style border-collapse border-left-color border-left-style border-right-color border-right-style "
+    "border-spacing border-top-color border-top-style bottom caption-side clip content counter-increment "
+    "counter-reset cue cue-after cue-before cursor direction elevation empty-cells "
+    "font-size-adjust font-stretch left max-height max-width min-height min-width orphans "
+    "outline outline-color outline-style outline-width overflow page-break-after page-break-before page-break-inside "
+    "pause pause-after pause-before pitch pitch-range play-during position quotes "
+    "richness right speak speak-header speak-numeral speak-punctuation speech-rate stress "
+    "table-layout top unicode-bidi visibility voice-family volume widows z-index";
+
+// CSS 3 properties
+char *css3prots =
+    "alignment-adjust alignment-baseline animation animation-delay animation-direction animation-duration animation-iteration-count animation-name "
+    "animation-play-state animation-timing-function appearance ascent backface-visibility background-break background-clip background-origin "
+    "background-size baseline baseline-shift bbox binding bleed bookmark-label bookmark-level "
+    "bookmark-state bookmark-target border-bottom-left-radius border-bottom-right-radius border-break border-image border-image-outset border-image-repeat "
+    "border-image-slice border-image-source border-image-width border-length border-radius border-top-left-radius border-top-right-radius box-align "
+    "box-decoration-break box-direction box-flex box-flex-group box-lines box-orient box-pack box-shadow "
+    "box-sizing box-sizing break-after break-before break-inside cap-height centerline color-profile "
+    "column-break-after column-break-before column-count column-fill column-gap column-rule column-rule-color column-rule-style "
+    "column-rule-width column-span column-width columns crop definition-src descent dominant-baseline "
+    "drop-initial-after-adjust drop-initial-after-align drop-initial-before-adjust drop-initial-before-align drop-initial-size drop-initial-value fit fit-position "
+    "flex-align flex-flow flex-line-pack flex-order flex-pack float-offset font-effect font-emphasize "
+    "font-emphasize-position font-emphasize-style font-size-adjust font-smooth grid-columns grid-rows hanging-punctuation hyphenate-after "
+    "hyphenate-before hyphenate-character hyphenate-lines hyphenate-resource hyphens icon image-orientation image-rendering "
+    "image-resolution inline-box-align line-break line-stacking line-stacking-ruby line-stacking-shift line-stacking-strategy mark "
+    "mark-after mark-before marker-offset marks marquee-direction marquee-loop marquee-play-count marquee-speed "
+    "marquee-style mathline move-to nav-down nav-index nav-left nav-right nav-up "
+    "opacity outline-offset overflow-style overflow-wrap overflow-x overflow-y page page-policy "
+    "panose-1 perspective perspective-origin phonemes presentation-level punctuation-trim rendering-intent resize "
+    "rest rest-after rest-before rotation rotation-point ruby-align ruby-overhang ruby-position "
+    "ruby-span size slope src stemh stemv string-set tab-side "
+    "tab-size target target-name target-new target-position text-align-last text-decoration-color text-decoration-line "
+    "text-decoration-skip text-decoration-style text-emphasis text-emphasis-color text-emphasis-position text-emphasis-style text-height text-indent "
+    "text-justify text-outline text-replace text-shadow text-space-collapse text-underline-position text-wrap topline "
+    "transform transform-origin transform-style transition transition-delay transition-duration transition-property transition-timing-function "
+    "unicode-range units-per-em voice-balance voice-duration voice-pitch voice-pitch-range voice-rate voice-stress "
+    "voice-volume white-space-collapse widths word-break word-wrap x-height";
+
+// pseudo elements
+char *pseudoElements =
+    "after before choices first-letter first-line line-marker marker outside "
+    "repeat-index repeat-item selection slot value";
+
+// use wild card with vendor prefixes for future proof, no need to list specific properties
+char *exProps = "^-ms- ^-apple- ^-epub- ^-moz- ^-o- ^-wap- ^-webkit- ^-xv-";
+char *exPseudoClasses = "^-ms- ^-apple- ^-epub- ^-moz- ^-o- ^-wap- ^-webkit- ^-xv-";
+char *exPseudoElements = "^-ms- ^-apple- ^-epub- ^-moz- ^-o- ^-wap- ^-webkit- ^-xv-";
+
+void InitializeCustomCssEditor(HWND editor) {
+	SendEditor(editor, SCI_SETLEXER, SCLEX_CSS);
+	SendEditor(editor, SCI_SETSTYLEBITS, 7);
+	SendEditor(editor, SCI_SETTABWIDTH, 2);
+	SendEditor(editor, SCI_SETTABINDENTS, 2);
+
+	SendEditor(editor, SCI_SETKEYWORDS, 0, 
+		reinterpret_cast<LPARAM>(css1prots));
+	SendEditor(editor, SCI_SETKEYWORDS, 1, 
+		reinterpret_cast<LPARAM>(pseudoClasses));
+    SendEditor(editor, SCI_SETKEYWORDS, 2, 
+		reinterpret_cast<LPARAM>(css2prots));
+	SendEditor(editor, SCI_SETKEYWORDS, 3, 
+		reinterpret_cast<LPARAM>(css3prots));	
+    SendEditor(editor, SCI_SETKEYWORDS, 4, 
+		reinterpret_cast<LPARAM>(pseudoElements));
+	SendEditor(editor, SCI_SETKEYWORDS, 5, 
+		reinterpret_cast<LPARAM>(exProps));
+    SendEditor(editor, SCI_SETKEYWORDS, 6, 
+		reinterpret_cast<LPARAM>(exPseudoClasses));
+    SendEditor(editor, SCI_SETKEYWORDS, 7, 
+		reinterpret_cast<LPARAM>(exPseudoElements));
+
+	const COLORREF red = RGB(0xFF, 0, 0);
+	const COLORREF offWhite = RGB(0xFF, 0xFB, 0xF0);
+	const COLORREF darkGreen = RGB(0, 0x80, 0);
+	const COLORREF darkBlue = RGB(0, 0, 0x80);
+    const COLORREF turqoise = RGB(0x20, 0x99, 0x99);
+    const COLORREF darkGrey = RGB(0x20, 0x20, 0x20);
+    const COLORREF darkPurple = RGB(0x30, 0x30, 0xAA);
+
+
+    SetAStyle(editor,                           SCE_CSS_DEFAULT,                black);
+    SetAStyle(editor,                           SCE_CSS_TAG,                    darkBlue);
+    SendEditor(editor,  SCI_STYLESETBOLD,       SCE_CSS_TAG,                    1);
+    SetAStyle(editor,                           SCE_CSS_CLASS,                  darkBlue);
+    SendEditor(editor,  SCI_STYLESETBOLD,       SCE_CSS_CLASS,                  1);
+    SetAStyle(editor,                           SCE_CSS_PSEUDOCLASS,            darkBlue);
+    SetAStyle(editor,                           SCE_CSS_UNKNOWN_PSEUDOCLASS,    darkBlue);
+    SendEditor(editor,  SCI_STYLESETBOLD,       SCE_CSS_UNKNOWN_PSEUDOCLASS,    1);
+    SetAStyle(editor,                           SCE_CSS_OPERATOR,               darkBlue);
+    SendEditor(editor,  SCI_STYLESETBOLD,       SCE_CSS_OPERATOR,               1);
+    SetAStyle(editor,                           SCE_CSS_IDENTIFIER,             red);
+    SetAStyle(editor,                           SCE_CSS_UNKNOWN_IDENTIFIER,     darkBlue);
+    SendEditor(editor,  SCI_STYLESETBOLD,       SCE_CSS_UNKNOWN_IDENTIFIER,     1);
+    SetAStyle(editor,                           SCE_CSS_VALUE,                  turqoise);
+    SetAStyle(editor,                           SCE_CSS_COMMENT,                darkGreen);
+    SetAStyle(editor,                           SCE_CSS_ID,                     darkPurple);
+    SendEditor(editor,  SCI_STYLESETBOLD,       SCE_CSS_ID,                     1);
+    SetAStyle(editor,                           SCE_CSS_IMPORTANT,              darkGrey);
+    SetAStyle(editor,                           SCE_CSS_DIRECTIVE,              darkGrey);
+    SetAStyle(editor,                           SCE_CSS_DOUBLESTRING,           darkGrey);
+    SetAStyle(editor,                           SCE_CSS_SINGLESTRING,           darkGrey);
+    SetAStyle(editor,                           SCE_CSS_IDENTIFIER2,            darkGrey);
+    SetAStyle(editor,                           SCE_CSS_ATTRIBUTE,              darkGrey);
+
+	ShowWindow(editor, SW_SHOW);
+}
+
 INT_PTR CALLBACK ConfigureDialogProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch(message)
@@ -184,7 +310,7 @@ INT_PTR CALLBACK ConfigureDialogProc(HWND hwnd, UINT message, WPARAM wParam, LPA
 
 			config->hwndAssetWrapTemplateEditor = ::CreateWindow(
 				TEXT("Scintilla"),
-				TEXT("Source"),
+				TEXT("AssetWrapTemplateEditor"),
 				WS_CHILD | WS_VSCROLL | WS_HSCROLL | WS_CLIPCHILDREN | WS_BORDER,
 				420, 50,
 				375, 345,
@@ -193,26 +319,45 @@ INT_PTR CALLBACK ConfigureDialogProc(HWND hwnd, UINT message, WPARAM wParam, LPA
 				BrowserSourcePlugin::hinstDLL,
 				0);
 
-			InitializeEditor(config->hwndAssetWrapTemplateEditor);
+			InitializeAssetWrapTemplateEditor(config->hwndAssetWrapTemplateEditor);
+
+            config->hwndCustomCssEditor = ::CreateWindow(
+				TEXT("Scintilla"),
+				TEXT("CustomCssEditor"),
+				WS_CHILD | WS_VSCROLL | WS_HSCROLL | WS_CLIPCHILDREN | WS_BORDER,
+				20, 195,
+				382, 146,
+				hwnd,
+				0,
+				BrowserSourcePlugin::hinstDLL,
+				0);
+
+            InitializeCustomCssEditor(config->hwndCustomCssEditor);
 
 			LocalizeWindow(hwnd);
 
 			HWND hwndUrlOrAsset = GetDlgItem(hwnd, IDC_URL_OR_ASSET);
 			HWND hwndWidth = GetDlgItem(hwnd, IDC_WIDTH);
             HWND hwndHeight = GetDlgItem(hwnd, IDC_HEIGHT);
-			HWND hwndCustomCss = GetDlgItem(hwnd, IDC_CUSTOM_CSS);
+			HWND hwndCustomCss = config->hwndCustomCssEditor;
 			HWND hwndIsWrappingAsset = GetDlgItem(hwnd, IDC_IS_WRAPPING_ASSET);
 			HWND hwndAssetWrapTemplate = config->hwndAssetWrapTemplateEditor;
 
 			SendMessage(hwndUrlOrAsset, WM_SETTEXT, 0, (LPARAM)config->url.Array());
 			SendMessage(hwndWidth, WM_SETTEXT, 0, (LPARAM)IntString(config->width).Array());
 			SendMessage(hwndHeight, WM_SETTEXT, 0, (LPARAM)IntString(config->height).Array());
-			SendMessage(hwndCustomCss, WM_SETTEXT, 0, (LPARAM)config->customCss.Array());
-			SendMessage(hwndIsWrappingAsset, BM_SETCHECK, config->isWrappingAsset, 0);
-			char *utf8String = config->assetWrapTemplate.CreateUTF8String();
-			SendEditor(hwndAssetWrapTemplate, SCI_ADDTEXT, config->assetWrapTemplate.Length(), (LPARAM)utf8String);
+			
+            char *utf8String = config->customCss.CreateUTF8String();
+            SendEditor(hwndCustomCss, SCI_SETTEXT, 0, (LPARAM)utf8String);
 			Free(utf8String);
-			SendEditor(hwndAssetWrapTemplate, SCI_SETREADONLY, !config->isWrappingAsset, 0);
+            
+            SendMessage(hwndIsWrappingAsset, BM_SETCHECK, config->isWrappingAsset, 0);
+			
+            utf8String = config->assetWrapTemplate.CreateUTF8String();
+			SendEditor(hwndAssetWrapTemplate, SCI_SETTEXT, 0, (LPARAM)utf8String);
+			Free(utf8String);
+			
+            SendEditor(hwndAssetWrapTemplate, SCI_SETREADONLY, !config->isWrappingAsset, 0);
 
 			return TRUE;
 		}
@@ -237,7 +382,7 @@ INT_PTR CALLBACK ConfigureDialogProc(HWND hwnd, UINT message, WPARAM wParam, LPA
 					HWND hwndUrlOrAsset = GetDlgItem(hwnd, IDC_URL_OR_ASSET);
 					HWND hwndWidth = GetDlgItem(hwnd, IDC_WIDTH);
 					HWND hwndHeight = GetDlgItem(hwnd, IDC_HEIGHT);
-					HWND hwndCustomCss = GetDlgItem(hwnd, IDC_CUSTOM_CSS);
+                    HWND hwndCustomCss = config->hwndCustomCssEditor;
 					HWND hwndIsWrappingAsset = GetDlgItem(hwnd, IDC_IS_WRAPPING_ASSET);
 					HWND hwndAssetWrapTemplate = config->hwndAssetWrapTemplateEditor;
 
@@ -257,21 +402,26 @@ INT_PTR CALLBACK ConfigureDialogProc(HWND hwnd, UINT message, WPARAM wParam, LPA
                     SendMessage(hwndHeight, WM_GETTEXT, str.Length()+1, (LPARAM)str.Array());
 					config->height = str.ToInt();
 
-					str.SetLength((UINT)SendMessage(hwndCustomCss, WM_GETTEXTLENGTH, 0, 0));
-                    if(str.Length()) {
-						SendMessage(hwndCustomCss, WM_GETTEXT, str.Length()+1, (LPARAM)str.Array());
-					} else {
-						str.Clear();
-					}
-
-					config->isWrappingAsset = (SendMessage(hwndIsWrappingAsset, BM_GETCHECK, 0, 0) == 1);
-
-					UINT length = (UINT)SendEditor(hwndAssetWrapTemplate, SCI_GETTEXTLENGTH);
+					UINT length = (UINT)SendEditor(hwndCustomCss, SCI_GETTEXTLENGTH);
 
 					char *utf8String = (char *)Allocate(length + 1);
 					utf8String[length] = 0;
-					SendMessage(hwndAssetWrapTemplate, SCI_GETTEXT, length + 1, (LPARAM)utf8String);
+					SendMessage(hwndCustomCss, SCI_GETTEXT, length + 1, (LPARAM)utf8String);
 					TSTR tstr = utf8_createTstr(utf8String);
+					str = tstr;
+					Free(tstr);
+					Free(utf8String);
+
+                    config->customCss = str;
+
+					config->isWrappingAsset = (SendMessage(hwndIsWrappingAsset, BM_GETCHECK, 0, 0) == 1);
+
+					length = (UINT)SendEditor(hwndAssetWrapTemplate, SCI_GETTEXTLENGTH);
+
+					utf8String = (char *)Allocate(length + 1);
+					utf8String[length] = 0;
+					SendMessage(hwndAssetWrapTemplate, SCI_GETTEXT, length + 1, (LPARAM)utf8String);
+					tstr = utf8_createTstr(utf8String);
 					str = tstr;
 					Free(tstr);
 					Free(utf8String);

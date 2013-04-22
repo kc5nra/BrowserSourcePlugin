@@ -6,6 +6,7 @@
 #include "OBSApi.h"
 
 #include "KeyboardManager.h"
+#include "Awesomium\DataSource.h"
 
 namespace Awesomium {
 	class WebCore;
@@ -13,7 +14,7 @@ namespace Awesomium {
 	class WebView;
 }
 
-class BrowserDataSource;
+class DataSourceWithMimeType;
 
 struct BrowserSourceConfig;
 
@@ -30,7 +31,7 @@ private:
 	int id;
 	int hWebView;
 	
-	BrowserDataSource *browserDataSource;
+    List<DataSourceWithMimeType *> dataSources;
 	BrowserSourceConfig *config;
 
 	CRITICAL_SECTION textureLock;

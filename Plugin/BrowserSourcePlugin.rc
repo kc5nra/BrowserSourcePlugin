@@ -31,7 +31,6 @@ FONT 8, "Ms Shell Dlg"
     DEFPUSHBUTTON   "OK", IDOK, 429, 248, 50, 14
     LTEXT           "Plugins.BrowserSource.UrlOrAssetDesc", IDC_STATIC, 13, 48, 256, 26, SS_LEFT
     LTEXT           "Plugins.BrowserSource.CustomCSSDesc", IDC_STATIC, 13, 215, 256, 26, SS_LEFT
-    CONTROL         "Rich Edit", IDC_CUSTOM_CSS, RICHEDIT_CLASS, WS_TABSTOP | WS_BORDER | ES_AUTOHSCROLL | ES_MULTILINE | ES_WANTRETURN, 13, 119, 256, 91
     AUTOCHECKBOX    "Plugins.BrowserSource.IsWrappingAsset", IDC_IS_WRAPPING_ASSET, 274, 18, 144, 8
 }
 

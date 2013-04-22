@@ -26,6 +26,7 @@ public:
 
 public:  // transient data, only rely on this if you know what you are doing
 	HWND hwndAssetWrapTemplateEditor;
+    HWND hwndCustomCssEditor;
 
 	BrowserSourceConfig(XElement *element)
 	{

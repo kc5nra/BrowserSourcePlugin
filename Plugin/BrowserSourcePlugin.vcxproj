@@ -14,6 +14,7 @@
     <ClInclude Include="BrowserManager.h" />
     <ClInclude Include="BrowserSource.h" />
     <ClInclude Include="BrowserSourcePlugin.h" />
+    <ClInclude Include="DataSources.h" />
     <ClInclude Include="KeyboardManager.h" />
     <ClInclude Include="Localization.h" />
     <ClInclude Include="resource.h" />

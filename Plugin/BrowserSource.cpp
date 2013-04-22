@@ -5,6 +5,7 @@
 #include "BrowserSource.h"
 #include "BrowserSourcePlugin.h"
 #include "SwfReader.h"
+#include "DataSources.h"
 
 #include <Awesomium\WebCore.h>
 #include <Awesomium\WebView.h>
@@ -19,142 +20,11 @@ using namespace Awesomium;
 #define NO_VIEW -2
 #define PENDING_VIEW -1
 
-struct FileMimeType {
-	FileMimeType(const String &fileType, const String &mimeType) {
-		this->fileType = fileType;
-		this->mimeType = mimeType;
-	}
-
-	String fileType;
-	String mimeType;
-};
-
-class BrowserDataSource : public DataSource 
-{
-
-private:
-	bool isWrappingAsset;
-	String assetWrapTemplate;
-	int swfWidth;
-	int swfHeight;
-
-	List<FileMimeType *> mimeTypes;
-
-public:
-	BrowserDataSource(bool isWrappingAsset, const String &assetWrapTemplate, int swfWidth, int swfHeight) 
-	{ 
-		this->isWrappingAsset = isWrappingAsset;
-		this->assetWrapTemplate = assetWrapTemplate;
-		this->swfWidth = swfWidth;
-		this->swfHeight = swfHeight;
-	}
-
-	virtual ~BrowserDataSource() 
-	{
-		for(UINT i = 0; i < mimeTypes.Num(); i++) {
-			delete mimeTypes[i];
-		}
-	}
-	
-public:
-	virtual void OnRequest(int request_id, const WebString& path) {
-		String pathString;
-		char buffer[1025];
-		path.ToUTF8(buffer, 1024);
-		String filePath(buffer);
-		
-		XFile file;
-
-		LPSTR lpFileDataUTF8 = 0;
-		DWORD dwFileSize = 0;
-		if(file.Open(filePath, XFILE_READ | XFILE_SHARED, XFILE_OPENEXISTING)) {
-			file.SetPos(0, XFILE_BEGIN);
-			dwFileSize = (DWORD)file.GetFileSize();
-			lpFileDataUTF8 = (LPSTR)Allocate(dwFileSize+1);
-			lpFileDataUTF8[dwFileSize] = 0;
-			file.Read(lpFileDataUTF8, dwFileSize);
-		} else {
-			Log(TEXT("BrowserDataSource::OnRequest: could not open specified file %s (invalid file name or access violation)"), filePath);
-		}
-
-		String mimeType = TEXT("text/html");
-
-		for(UINT i = 0; i < mimeTypes.Num(); i++) {
-			FileMimeType *fileMimeType = mimeTypes.GetElement(i);
-			if (fileMimeType->fileType.Length() > filePath.Length()) {
-				continue;
-			}
-			String extractedType = filePath.Right(fileMimeType->fileType.Length());
-			if (extractedType.CompareI(fileMimeType->fileType)) {
-				mimeType = fileMimeType->mimeType;
-				break;
-			}
-		}
-
-		WebString wsMimeType = WebString((wchar16 *)mimeType.Array());
-
-		if (isWrappingAsset) {
-			isWrappingAsset = false;
-
-			String fileName;
-
-			for(UINT i = filePath.Length() - 1; i >= 0; i--) {
-				if (filePath[i] == '/') {
-					fileName = filePath.Right(filePath.Length() - i - 1);
-					break;
-				}
-			}
-
-			assetWrapTemplate.FindReplace(TEXT("$(FILE)"), fileName);
-			
-			//TODO: Figure out what to do with this information
-			// Since a lot of flash is vector art, it ends up 
-			// making it super blurry if the actual size
-			// is pretty small.
-
-			//SwfReader swfReader((unsigned char *)lpFileDataUTF8);
-			//if (!swfReader.HasError()) {
-			//	swfWidth = swfReader.GetWidth();
-			//	swfHeight = swfReader.GetHeight();
-			//}
-
-			assetWrapTemplate.FindReplace(TEXT("$(WIDTH)"), IntString(swfWidth));
-			assetWrapTemplate.FindReplace(TEXT("$(HEIGHT)"), IntString(swfHeight));
-
-			LPSTR lpAssetWrapTemplate = assetWrapTemplate.CreateUTF8String();
-			SendResponse(request_id,
-				strlen(lpAssetWrapTemplate),
-				(unsigned char *)lpAssetWrapTemplate,
-				WSLit("text/html"));
-
-			Free(lpAssetWrapTemplate);
-				
-			
-		} else {
-			SendResponse(request_id,
-				dwFileSize,
-				(unsigned char *)lpFileDataUTF8,
-				wsMimeType);
-		}
-
-		
-		
-		Free(lpFileDataUTF8);
-
-		file.Close();
-	}
-
-	void AddMimeType(const String &fileType, const String &mimeType) {
-		mimeTypes.Add(new FileMimeType(fileType, mimeType));
-	}
-};
-
 BrowserSource::BrowserSource(XElement *data)
 {
 	Log(TEXT("Using Browser Source"));
 
 	hWebView = -2;
-	browserDataSource = NULL;
 
 	config = new BrowserSourceConfig(data);
 
@@ -177,8 +47,11 @@ BrowserSource::~BrowserSource()
 	LeaveCriticalSection(&textureLock);
 
 	delete config;
-	delete browserDataSource;
-	browserDataSource = NULL;
+	for (UINT i = 0; i < dataSources.Num(); i++) {
+        delete dataSources[i];
+    }
+    dataSources.Clear();
+
 	config = NULL;
 }
 
@@ -194,15 +67,19 @@ WebView *BrowserSource::CreateWebViewCallback(WebCore *webCore, const int hWebVi
 	WebSession *webSession;
 	webSession = webCore->CreateWebSession(WSLit("plugins\\BrowserSourcePlugin\\cache"), webPreferences);
 	
-	if (browserDataSource) {
-		delete browserDataSource;
-	}
+	for (UINT i = 0; i < dataSources.Num(); i++) {
+        delete dataSources[i];
+    }
+    dataSources.Clear();
 
-	browserDataSource = new BrowserDataSource(config->isWrappingAsset, config->assetWrapTemplate, config->width, config->height);
-	browserDataSource->AddMimeType(TEXT(".jpg"), TEXT("image/jpg"));
-	browserDataSource->AddMimeType(TEXT(".jpeg"), TEXT("image/jpeg"));
-
-	webSession->AddDataSource(WSLit("local"), browserDataSource);
+    dataSources.Add(new BrowserDataSource(config->isWrappingAsset, config->assetWrapTemplate, config->width, config->height));
+    dataSources.Add(new BlankDataSource(config->isWrappingAsset, config->assetWrapTemplate, config->width, config->height));
+	
+    for(UINT i = 0; i < dataSources.Num(); i++) {
+        dataSources[i]->AddMimeType(TEXT(".jpg"), TEXT("image/jpg"));
+	    dataSources[i]->AddMimeType(TEXT(".jpeg"), TEXT("image/jpeg"));
+        webSession->AddDataSource(dataSources[i]->GetHost(), dataSources[i]);
+    }
 
 	WebView *webView;
 	webView = webCore->CreateWebView(config->width, config->height, webSession);
