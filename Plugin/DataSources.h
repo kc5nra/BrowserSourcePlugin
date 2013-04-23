@@ -8,14 +8,15 @@
 
 using namespace Awesomium;
 
-struct FileMimeType {
-	FileMimeType(const String &fileType, const String &mimeType) {
+struct MimeType {
+	MimeType(const String &mimeType, const String &fileType) {
 		this->fileType = fileType;
 		this->mimeType = mimeType;
 	}
 
+    String mimeType;
 	String fileType;
-	String mimeType;
+	
 };
 
 class DataSourceWithMimeType : public DataSource {
@@ -28,11 +29,11 @@ public:
     }
 
 protected:
-    List<FileMimeType *> mimeTypes;
+    List<MimeType *> mimeTypes;
 
 public:
-    void AddMimeType(const String &fileType, const String &mimeType) {
-		mimeTypes.Add(new FileMimeType(fileType, mimeType));
+    void AddMimeType(const String &mimeType, const String &fileType) {
+		mimeTypes.Add(new MimeType(mimeType, fileType));
 	}
     
     virtual WebString GetHost() = 0;
@@ -67,17 +68,6 @@ public:
 		
 		String mimeType = TEXT("text/html");
 
-		for(UINT i = 0; i < mimeTypes.Num(); i++) {
-			FileMimeType *fileMimeType = mimeTypes.GetElement(i);
-			if (fileMimeType->fileType.Length() > filePath.Length()) {
-				continue;
-			}
-			String extractedType = filePath.Right(fileMimeType->fileType.Length());
-			if (extractedType.CompareI(fileMimeType->fileType)) {
-				mimeType = fileMimeType->mimeType;
-				break;
-			}
-		}
 
 		WebString wsMimeType = WebString((wchar16 *)mimeType.Array());
 
@@ -137,8 +127,6 @@ private:
 	int width;
 	int height;
 
-	List<FileMimeType *> mimeTypes;
-
 public:
 	BrowserDataSource(bool isWrappingAsset, const String &assetWrapTemplate, int width, int height) 
 	{ 
@@ -170,15 +158,15 @@ public:
 		}
 
 		String mimeType = TEXT("text/html");
-
+		
 		for(UINT i = 0; i < mimeTypes.Num(); i++) {
-			FileMimeType *fileMimeType = mimeTypes.GetElement(i);
-			if (fileMimeType->fileType.Length() > filePath.Length()) {
+			MimeType *m = mimeTypes.GetElement(i);
+			if (m->fileType.Length() > filePath.Length()) {
 				continue;
 			}
-			String extractedType = filePath.Right(fileMimeType->fileType.Length());
-			if (extractedType.CompareI(fileMimeType->fileType)) {
-				mimeType = fileMimeType->mimeType;
+			String extractedType = filePath.Right(m->fileType.Length());
+			if (extractedType.CompareI(m->fileType)) {
+				mimeType = m->mimeType;
 				break;
 			}
 		}

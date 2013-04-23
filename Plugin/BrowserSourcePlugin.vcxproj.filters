@@ -29,6 +29,9 @@
     <ClInclude Include="DataSources.h">
       <Filter>Headers</Filter>
     </ClInclude>
+    <ClInclude Include="MimeTypes.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Headers">

@@ -172,6 +172,7 @@ protected:
 							browserEvent->source->UpdateCallback(webViews.GetElement(browserEvent->webView));
 							browserEvent->Complete();
 							delete browserEvent;
+                            break;
 						}
 
 						browserEvent->Complete();

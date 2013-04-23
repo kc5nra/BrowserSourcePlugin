@@ -9,9 +9,12 @@
 #define EXTERN_DLL_EXPORT extern "C" __declspec(dllexport)
 
 class ServerPingSettings;
+
 namespace Awesomium {
 	class WebCore;
 }
+
+extern String ToAPIString(WebString &webString);
 
 struct BrowserSourceConfig {
 private:
@@ -23,6 +26,7 @@ public:
 	String customCss;
 	bool isWrappingAsset;
 	String assetWrapTemplate;
+    bool isExposingOBSApi;
 
 public:  // transient data, only rely on this if you know what you are doing
 	HWND hwndAssetWrapTemplateEditor;
@@ -60,6 +64,7 @@ public:  // transient data, only rely on this if you know what you are doing
 			L"    </object>\r\n"
 			L"  </body>\r\n"
 			L"</html>\r\n";
+        isExposingOBSApi = false;
 
 	}
 
@@ -71,6 +76,7 @@ public:  // transient data, only rely on this if you know what you are doing
 		customCss = element->GetString(TEXT("css"));
 		isWrappingAsset = (element->GetInt(TEXT("isWrappingAsset")) == 1);
 		assetWrapTemplate = element->GetString(TEXT("assetWrapTemplate"));
+        isExposingOBSApi = (element->GetInt(TEXT("isExposingOBSApi")) == 1);
 	}
 
 	void Save()
@@ -79,8 +85,9 @@ public:  // transient data, only rely on this if you know what you are doing
 		element->SetInt(TEXT("width"), width);
 		element->SetInt(TEXT("height"), height);
 		element->SetString(TEXT("css"), customCss);
-		element->SetInt(TEXT("isWrappingAsset"), (isWrappingAsset == 1) ? 1 : 0);
+		element->SetInt(TEXT("isWrappingAsset"), (isWrappingAsset) ? 1 : 0);
 		element->SetString(TEXT("assetWrapTemplate"), assetWrapTemplate);
+        element->SetInt(TEXT("isExposingOBSApi"), (isExposingOBSApi) ? 1 : 0);
 	}
 };
 

@@ -6,20 +6,25 @@
 #include "OBSApi.h"
 
 #include "KeyboardManager.h"
-#include "Awesomium\DataSource.h"
+#include "Awesomium\JSObject.h"
 
 namespace Awesomium {
 	class WebCore;
 	class WebSession;
 	class WebView;
+    class JSArray;
+    class JSValue;
+    class JSMethodHandler;
 }
 
 class DataSourceWithMimeType;
+
 
 struct BrowserSourceConfig;
 
 class BrowserSource : public ImageSource
 {
+    class BrowserSourceListener;
 
 public:
     BrowserSource(XElement *data);
@@ -30,11 +35,17 @@ private:
 	Texture *texture;
 	int id;
 	int hWebView;
-	
+	unsigned int hJSGlobal;
+
+    BrowserSourceListener *browserSourceListener;
+
     List<DataSourceWithMimeType *> dataSources;
 	BrowserSourceConfig *config;
 
+
 	CRITICAL_SECTION textureLock;
+protected:
+    CRITICAL_SECTION jsGlobalLock;
 
 public:
     // ImageSource
