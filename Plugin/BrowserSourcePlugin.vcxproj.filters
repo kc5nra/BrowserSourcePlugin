@@ -7,7 +7,6 @@
     <ClCompile Include="KeyboardManager.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="SwfReader.h" />
     <ClInclude Include="BrowserManager.h">
       <Filter>Headers</Filter>
     </ClInclude>
@@ -30,6 +29,9 @@
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="MimeTypes.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="SwfReader.h">
       <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>

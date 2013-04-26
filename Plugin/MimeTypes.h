@@ -3,7 +3,8 @@
 // generated at Tue Apr 23 21:24:06 JST 2013
 // BrowserSourcePlugin
 //
-static CTSTR mimeTypes[] = {
+static CTSTR mimeTypes[] = 
+{
     L"application/andrew-inset", L"ez",
     L"application/applixware", L"aw",
     L"application/atom+xml", L"atom",

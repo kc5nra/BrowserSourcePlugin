@@ -10,13 +10,15 @@
 
 class ServerPingSettings;
 
-namespace Awesomium {
+namespace Awesomium 
+{
 	class WebCore;
 }
 
 extern String ToAPIString(WebString &webString);
 
-struct BrowserSourceConfig {
+struct BrowserSourceConfig 
+{
 private:
 	XElement *element;
 public:
@@ -72,7 +74,7 @@ public:  // transient data, only rely on this if you know what you are doing
 	{
 		url = element->GetString(TEXT("url"));
 		width = element->GetInt(TEXT("width"));
-		height = element->GetInt(TEXT("height"));
+        height = element->GetInt(TEXT("height"));
 		customCss = element->GetString(TEXT("css"));
 		isWrappingAsset = (element->GetInt(TEXT("isWrappingAsset")) == 1);
 		assetWrapTemplate = element->GetString(TEXT("assetWrapTemplate"));

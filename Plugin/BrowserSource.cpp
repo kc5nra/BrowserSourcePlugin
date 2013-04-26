@@ -1,6 +1,6 @@
 /**
- * John Bradley (jrb@turrettech.com)
- */
+* John Bradley (jrb@turrettech.com)
+*/
 
 #include "BrowserSource.h"
 #include "BrowserSourcePlugin.h"
@@ -22,10 +22,12 @@ using namespace Awesomium;
 #define NO_VIEW -2
 #define PENDING_VIEW -1
 
-class BrowserSource::BrowserSourceListener : public WebViewListener::Load, public JSMethodHandler {
+class BrowserSource::BrowserSourceListener : public WebViewListener::Load, public JSMethodHandler 
+{
     friend class SceneItem;
 public:
-    BrowserSourceListener(BrowserSource *browserSource) {
+    BrowserSourceListener(BrowserSource *browserSource) 
+    {
         this->browserSource = browserSource;
     }
 
@@ -51,11 +53,11 @@ public: //WebViewListener::Load
                     Log(TEXT("invalid set request for scene item, object must have name property"));
                     return;
                 }
-                    
+
                 String name = ToAPIString(object.GetProperty(WSLit("name")).ToString());
-                
+
                 //API->EnterSceneMutex();
-                
+
                 SceneItem *sceneItem = API->GetScene()->GetSceneItem(name);
                 if (sceneItem) {
                     bool validObject = true;
@@ -79,7 +81,7 @@ public: //WebViewListener::Load
                         sceneItem->SetPos(position);
                         sceneItem->SetSize(size);
                     }
-                    
+
                 } else {
                     Log(TEXT("invalid set request for scene item, scene with name %s not found"), name);
                 }
@@ -88,7 +90,7 @@ public: //WebViewListener::Load
             }
         }
     }
-    
+
     JSValue 
     OnMethodCallWithReturnValue(
         Awesomium::WebView* caller, 
@@ -96,13 +98,13 @@ public: //WebViewListener::Load
         const Awesomium::WebString& methodName, 
         const Awesomium::JSArray& args)
     {
-       if (remoteObjectId == browserSource->hJSGlobal) {
+        if (remoteObjectId == browserSource->hJSGlobal) {
             if (methodName == WSLit("getScene")) {
             } else if (methodName == WSLit("getSceneItem")) {
                 if (args.size() == 1) {
                     if (args[0].IsString()) {
                         API->EnterSceneMutex();
-                        
+
                         Scene *scene = API->GetScene();
                         String &string = ToAPIString(args[0].ToString());
                         SceneItem *sceneItem = scene->GetSceneItem(string);
@@ -122,7 +124,7 @@ public: //WebViewListener::Load
             }
         }
 
-       return JSValue::Undefined();
+        return JSValue::Undefined();
     }
 
 
@@ -145,159 +147,162 @@ public: //WebViewListener::Load
 
 BrowserSource::BrowserSource(XElement *data)
 {
-	Log(TEXT("Using Browser Source"));
+    Log(TEXT("Using Browser Source"));
 
-	hWebView = -2;
+    hWebView = -2;
+    isDisposed = false;
 
-	config = new BrowserSourceConfig(data);
+    config = new BrowserSourceConfig(data);
     browserSourceListener = new BrowserSourceListener(this);
 
-	InitializeCriticalSection(&textureLock);
+    InitializeCriticalSection(&textureLock);
     InitializeCriticalSection(&jsGlobalLock);
-    
 
-	UpdateSettings();	
+    UpdateSettings();	
 }
 
 BrowserSource::~BrowserSource()
 {
-	BrowserManager *browserManager = BrowserSourcePlugin::instance->GetBrowserManager();
-	
-	if (hWebView >= 0) {
-		browserManager->ShutdownAndWait(hWebView);
-	}
+
+    BrowserManager *browserManager = BrowserSourcePlugin::instance->GetBrowserManager();
+    browserManager->ShutdownAndWait(this);
 
     delete browserSourceListener;
 
-	EnterCriticalSection(&textureLock);
-	delete texture;
-	texture = NULL;
-	LeaveCriticalSection(&textureLock);
+    EnterCriticalSection(&textureLock);
+    delete texture;
+    texture = NULL;
+    LeaveCriticalSection(&textureLock);
 
-	delete config;
-	for (UINT i = 0; i < dataSources.Num(); i++) {
+    delete config;
+    for (UINT i = 0; i < dataSources.Num(); i++) {
         delete dataSources[i];
     }
+
     dataSources.Clear();
 
-	config = NULL;
+    DeleteCriticalSection(&textureLock);
+    DeleteCriticalSection(&jsGlobalLock);
+
+    config = NULL;
 }
 
 void BrowserSource::Tick(float fSeconds)
 {
 }
 
-WebView *BrowserSource::CreateWebViewCallback(WebCore *webCore, const int hWebView) {
-	WebPreferences webPreferences;
-	WebString webString = WebString((const wchar16 *)config->customCss.Array());
-	webPreferences.user_stylesheet = webString;
-	webPreferences.enable_web_gl = true;
-	WebSession *webSession;
-	webSession = webCore->CreateWebSession(WSLit("plugins\\BrowserSourcePlugin\\cache"), webPreferences);
-	
-	for (UINT i = 0; i < dataSources.Num(); i++) {
+WebView *BrowserSource::CreateWebViewCallback(WebCore *webCore, const int hWebView) 
+{
+    WebPreferences webPreferences;
+    WebString webString = WebString((const wchar16 *)config->customCss.Array());
+    webPreferences.user_stylesheet = webString;
+    webPreferences.enable_web_gl = true;
+    WebSession *webSession;
+    webSession = webCore->CreateWebSession(WSLit("plugins\\BrowserSourcePlugin\\cache"), webPreferences);
+
+    for (UINT i = 0; i < dataSources.Num(); i++) {
         delete dataSources[i];
     }
     dataSources.Clear();
 
     dataSources.Add(new BrowserDataSource(config->isWrappingAsset, config->assetWrapTemplate, config->width, config->height));
     dataSources.Add(new BlankDataSource(config->isWrappingAsset, config->assetWrapTemplate, config->width, config->height));
-	
+
     for(UINT i = 0; i < dataSources.Num(); i++) {
         int mimeTypeCount = sizeof(mimeTypes) / sizeof(CTSTR);
-		for(int j = 0; j < mimeTypeCount; j += 2) {
-			dataSources[i]->AddMimeType(mimeTypes[j], mimeTypes[j+1]);
-		}
+        for(int j = 0; j < mimeTypeCount; j += 2) {
+            dataSources[i]->AddMimeType(mimeTypes[j], mimeTypes[j+1]);
+        }
         webSession->AddDataSource(dataSources[i]->GetHost(), dataSources[i]);
     }
 
-	WebView *webView;
-	webView = webCore->CreateWebView(config->width, config->height, webSession);
-	webView->SetTransparent(true);
+    WebView *webView;
+    webView = webCore->CreateWebView(config->width, config->height, webSession);
+    webView->SetTransparent(true);
 
     if (config->isExposingOBSApi) {
         webView->set_js_method_handler(browserSourceListener);
         webView->set_load_listener(browserSourceListener);
     }
-    
-	webString = WebString((const wchar16 *)config->url.Array());
-	WebURL url(webString);
-	webView->LoadURL(url);
-	
-	this->hWebView = hWebView;
 
-	browserSize.x = float(config->width);
-	browserSize.y = float(config->height);
+    webString = WebString((const wchar16 *)config->url.Array());
+    WebURL url(webString);
+    webView->LoadURL(url);
 
-	EnterCriticalSection(&textureLock);
-	if (texture) {
-		delete texture;
-		texture = 0;
-	}
+    this->hWebView = hWebView;
 
-	texture = CreateTexture(config->width, config->height, GS_BGRA, NULL, FALSE, FALSE);
-	LeaveCriticalSection(&textureLock);
+    browserSize.x = float(config->width);
+    browserSize.y = float(config->height);
 
-	return webView;
+    EnterCriticalSection(&textureLock);
+    if (texture) {
+        delete texture;
+        texture = 0;
+    }
+
+    texture = CreateTexture(config->width, config->height, GS_BGRA, NULL, FALSE, FALSE);
+    LeaveCriticalSection(&textureLock);
+
+    return webView;
 }
 
 void BrowserSource::UpdateCallback(WebView *webView)
 {
-	BitmapSurface *surface = (BitmapSurface *)webView->surface();
+    BitmapSurface *surface = (BitmapSurface *)webView->surface();
 
-	EnterCriticalSection(&textureLock);
-	if (surface && texture) {
-		texture->SetImage((void *)surface->buffer(), GS_IMAGEFORMAT_BGRA, surface->row_span());
-	}
-	LeaveCriticalSection(&textureLock);
+    EnterCriticalSection(&textureLock);
+    if (surface && texture) {
+        texture->SetImage((void *)surface->buffer(), GS_IMAGEFORMAT_BGRA, surface->row_span());
+    }
+    LeaveCriticalSection(&textureLock);
 
 }
 
 void BrowserSource::Render(const Vect2 &pos, const Vect2 &size)
 {
-	BrowserManager *browserManager = BrowserSourcePlugin::instance->GetBrowserManager();	
-	
-	// mini state machine
-	switch(hWebView) {
-		case NO_VIEW: 
-		{
-			hWebView = PENDING_VIEW;
-			browserManager->AddEvent(new Browser::Event(Browser::CREATE_VIEW, this));
+    BrowserManager *browserManager = BrowserSourcePlugin::instance->GetBrowserManager();	
 
-			break;
-		}
-		case PENDING_VIEW:
-		{
-			browserManager->Update();
-			return;
-		}
-		default:
-		{
-			browserManager->AddEvent(new Browser::Event(Browser::UPDATE, this, hWebView));
-			browserManager->Update();
+    // mini state machine
+    switch(hWebView) {
+    case NO_VIEW: 
+        {
+            hWebView = PENDING_VIEW;
+            browserManager->AddEvent(new Browser::Event(Browser::CREATE_VIEW, this));
 
-			EnterCriticalSection(&textureLock);
-			if (texture) {
-				DrawSprite(texture, 0xFFFFFFFF, pos.x, pos.y, pos.x + size.x, pos.y + size.y);
-			}
-			LeaveCriticalSection(&textureLock);
-		}
-	}
+            break;
+        }
+    case PENDING_VIEW:
+        {
+            browserManager->Update();
+            return;
+        }
+    default:
+        {
+            browserManager->AddEvent(new Browser::Event(Browser::UPDATE, this, hWebView));
+            browserManager->Update();
+
+            EnterCriticalSection(&textureLock);
+            if (texture) {
+                DrawSprite(texture, 0xFFFFFFFF, pos.x, pos.y, pos.x + size.x, pos.y + size.y);
+            }
+            LeaveCriticalSection(&textureLock);
+        }
+    }
 }
 
 void BrowserSource::UpdateSettings()
 {
-	BrowserManager *browserManager = BrowserSourcePlugin::instance->GetBrowserManager();	
+    BrowserManager *browserManager = BrowserSourcePlugin::instance->GetBrowserManager();	
 
-	if (hWebView == NO_VIEW) {
-		hWebView = PENDING_VIEW;
-	}
+    if (hWebView == NO_VIEW) {
+        hWebView = PENDING_VIEW;
+    }
 
-	config->Reload();
-	browserManager->AddEvent(new Browser::Event(Browser::CREATE_VIEW, this, hWebView));
+    config->Reload();
+    browserManager->AddEvent(new Browser::Event(Browser::CREATE_VIEW, this, hWebView));
 }
 
 Vect2 BrowserSource::GetSize() const 
 {
-	return browserSize;
+    return browserSize;
 }

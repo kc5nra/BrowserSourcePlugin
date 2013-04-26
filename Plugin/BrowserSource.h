@@ -36,6 +36,7 @@ private:
 	int id;
 	int hWebView;
 	unsigned int hJSGlobal;
+    bool isDisposed;
 
     BrowserSourceListener *browserSourceListener;
 
@@ -53,6 +54,7 @@ public:
     void Render(const Vect2 &pos, const Vect2 &size);
     void UpdateSettings();
     Vect2 GetSize() const;
+    int GetWebView() { return hWebView; }
 
 // callbacks
 public:

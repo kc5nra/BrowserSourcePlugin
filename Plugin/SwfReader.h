@@ -8,30 +8,29 @@
 
 class SwfReader
 {
-	
+
 private:
-	int width;
-	int height;
-	int fileSize;
-	int version;
+    int width;
+    int height;
+    int fileSize;
+    int version;
 
-	char f1, f2, f3;
-	unsigned char* buffer;
-	size_t bufferSize;
-	bool error;
-	
+    char f1, f2, f3;
+    unsigned char* buffer;
+    size_t bufferSize;
+    bool error;
+
 protected:
-	unsigned char* InflateBuffer(unsigned char* data, size_t size);
-	int ExtractDimensions(const unsigned char* data);
-		
-public:
-	SwfReader(unsigned char* buffer, size_t bufferSize = BUFFER_SIZE);
-		
-public:
-	int GetWidth();
-	int GetHeight();
-	int GetVersion();
-	int GetFileSize();
-	bool HasError();
+    unsigned char* InflateBuffer(unsigned char* data, size_t size);
+    int ExtractDimensions(const unsigned char* data);
 
+public:
+    SwfReader(unsigned char* buffer, size_t bufferSize = BUFFER_SIZE);
+
+public:
+    int GetWidth();
+    int GetHeight();
+    int GetVersion();
+    int GetFileSize();
+    bool HasError();
 };
