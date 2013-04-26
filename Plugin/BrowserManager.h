@@ -25,7 +25,8 @@ namespace Browser
 
     struct Event 
     {
-        Event(EventType eventType, BrowserSource *source, int webView = -1, bool isNotifyingOnCompletion = false) {
+        Event(EventType eventType, BrowserSource *source, int webView = -1, bool isNotifyingOnCompletion = false) 
+        {
             this->eventType = eventType;
             this->source = source;
             this->webView = webView;
@@ -36,17 +37,23 @@ namespace Browser
             }
         }
 
-        ~Event() {
+        ~Event() 
+        {
+            if (completionEvent) {
+                CloseHandle(this->completionEvent);
+            }
         }
 
-        void Complete() {
+        void Complete() 
+        {
             if (completionEvent) {
                 SetEvent(completionEvent);
             }
         }
 
         // I don't like the spelling Canceled
-        void Cancelled() {
+        void Cancelled() 
+        {
             if (completionEvent) {
                 SetEvent(completionEvent);
             }
