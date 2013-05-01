@@ -323,7 +323,7 @@ INT_PTR CALLBACK ConfigureDialogProc(HWND hwnd, UINT message, WPARAM wParam, LPA
     case WM_INITDIALOG:
         {
             SetWindowLongPtr(hwnd, DWLP_USER, (LONG_PTR)lParam);
-            BrowserSourceConfig *config = (BrowserSourceConfig *)lParam;
+            BrowserSourceConfig *config = reinterpret_cast<BrowserSourceConfig *>(lParam);
 
             config->hwndAssetWrapTemplateEditor = ::CreateWindow(
                 TEXT("Scintilla"),
@@ -384,7 +384,7 @@ INT_PTR CALLBACK ConfigureDialogProc(HWND hwnd, UINT message, WPARAM wParam, LPA
             {
             case IDC_IS_WRAPPING_ASSET:
                 {
-                    BrowserSourceConfig *config = (BrowserSourceConfig *)GetWindowLongPtr(hwnd, DWLP_USER);
+                    BrowserSourceConfig *config = reinterpret_cast<BrowserSourceConfig *>(GetWindowLongPtr(hwnd, DWLP_USER));
                     HWND hwndIsWrappingAsset = GetDlgItem(hwnd, IDC_IS_WRAPPING_ASSET);
                     HWND hwndAssetWrapTemplate = config->hwndAssetWrapTemplateEditor;
 
@@ -435,7 +435,7 @@ INT_PTR CALLBACK ConfigureDialogProc(HWND hwnd, UINT message, WPARAM wParam, LPA
 
                     length = (UINT)SendEditor(hwndAssetWrapTemplate, SCI_GETTEXTLENGTH);
 
-                    utf8String = (char *)Allocate(length + 1);
+                    utf8String = static_cast<char *>(Allocate(length + 1));
                     utf8String[length] = 0;
                     SendMessage(hwndAssetWrapTemplate, SCI_GETTEXT, length + 1, (LPARAM)utf8String);
                     tstr = utf8_createTstr(utf8String);
@@ -503,7 +503,6 @@ bool STDCALL ConfigureBrowserSource(XElement *element, bool bCreating)
 BrowserSourcePlugin::BrowserSourcePlugin()
 {
     isDynamicLocale = false;
-    settings = NULL;
     browserManager = new BrowserManager();
     if (!locale->HasLookup(KEY("PluginName"))) {
         isDynamicLocale = true;

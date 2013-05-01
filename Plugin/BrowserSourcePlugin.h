@@ -33,10 +33,15 @@ public:
 public:  // transient data, only rely on this if you know what you are doing
 	HWND hwndAssetWrapTemplateEditor;
     HWND hwndCustomCssEditor;
+    bool hasKeyboardEventListener;
 
 	BrowserSourceConfig(XElement *element)
 	{
 		this->element = element;
+        hwndAssetWrapTemplateEditor = 0;
+        hwndCustomCssEditor = 0;
+        hasKeyboardEventListener = false;
+
 		Reload();
 	}
 
@@ -67,6 +72,7 @@ public:  // transient data, only rely on this if you know what you are doing
 			L"  </body>\r\n"
 			L"</html>\r\n";
         isExposingOBSApi = false;
+        hasKeyboardEventListener = false;
 
 	}
 
@@ -106,11 +112,9 @@ public:
 
 private:
 	bool isDynamicLocale;
-	ServerPingSettings *settings;
 	BrowserManager *browserManager;
 
 public:
-	ServerPingSettings *GetSettings() { return settings; }
 	BrowserManager *GetBrowserManager() { return browserManager; }
 
 };

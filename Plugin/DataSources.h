@@ -73,46 +73,20 @@ public:
 
         String mimeType = TEXT("text/html");
 
-
         WebString wsMimeType = WebString((wchar16 *)mimeType.Array());
 
-        if (isWrappingAsset) {
-            isWrappingAsset = false;
+        isWrappingAsset = false;
 
-            assetWrapTemplate.FindReplace(TEXT("$(WIDTH)"), IntString(width));
-            assetWrapTemplate.FindReplace(TEXT("$(HEIGHT)"), IntString(height));
+        assetWrapTemplate.FindReplace(TEXT("$(WIDTH)"), IntString(width));
+        assetWrapTemplate.FindReplace(TEXT("$(HEIGHT)"), IntString(height));
 
-            LPSTR lpAssetWrapTemplate = assetWrapTemplate.CreateUTF8String();
-            SendResponse(request_id,
-                strlen(lpAssetWrapTemplate),
-                (unsigned char *)lpAssetWrapTemplate,
-                WSLit("text/html"));
+        LPSTR lpAssetWrapTemplate = assetWrapTemplate.CreateUTF8String();
+        SendResponse(request_id,
+            strlen(lpAssetWrapTemplate),
+            (unsigned char *)lpAssetWrapTemplate,
+            WSLit("text/html"));
 
-            Free(lpAssetWrapTemplate);
-
-
-        } else {
-            XFile file;
-            LPSTR lpFileDataUTF8 = 0;
-            DWORD dwFileSize = 0;
-            if(file.Open(filePath, XFILE_READ | XFILE_SHARED, XFILE_OPENEXISTING)) {
-                file.SetPos(0, XFILE_BEGIN);
-                dwFileSize = (DWORD)file.GetFileSize();
-                lpFileDataUTF8 = (LPSTR)Allocate(dwFileSize+1);
-                lpFileDataUTF8[dwFileSize] = 0;
-                file.Read(lpFileDataUTF8, dwFileSize);
-            } else {
-                Log(TEXT("BrowserDataSource::OnRequest: could not open specified file %s (invalid file name or access violation)"), filePath);
-            }
-
-            SendResponse(request_id,
-                dwFileSize,
-                (unsigned char *)lpFileDataUTF8,
-                wsMimeType);
-
-            Free(lpFileDataUTF8);
-            file.Close();
-        }
+        Free(lpAssetWrapTemplate);
 
     }
 
@@ -149,7 +123,7 @@ public:
         char buffer[1025];
         path.ToUTF8(buffer, 1024);
         String filePath(buffer);
-
+        filePath = filePath.GetToken(0, '?');
         XFile file;
 
         LPSTR lpFileDataUTF8 = 0;

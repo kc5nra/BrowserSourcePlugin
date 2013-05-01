@@ -32,7 +32,7 @@ bool LoadPlugin()
 		InternalOnStartStream && 
 		InternalOnStopStream &&
 		InternalGetPluginName &&
-		InternalGetPluginName) 
+		InternalGetPluginDescription) 
 	{
 			return InternalLoadPlugin();
 	}

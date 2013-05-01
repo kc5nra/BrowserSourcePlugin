@@ -19,6 +19,7 @@ namespace Browser
     {
         UPDATE,
         CREATE_VIEW,
+        SCENE_CHANGE,
         SHUTDOWN,
         CLEANUP
     };
@@ -73,7 +74,7 @@ public:
 
     static DWORD WINAPI BrowserManagerEntry(LPVOID self) 
     {
-        ((BrowserManager *)(self))->BrowserManagerEntry();
+        (static_cast<BrowserManager *>(self))->BrowserManagerEntry();
         return 0;
     }
 
@@ -82,30 +83,49 @@ public:
     {
         InitializeCriticalSection(&cs);
 
-        generalUpdate = new Browser::Event(Browser::UPDATE, NULL);
-        webCore = 0;
+        keyboardManager = new KeyboardManager();
 
+        generalUpdate = new Browser::Event(Browser::UPDATE, NULL);
         updateEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+        threadHandle = NULL;
+        webCore = NULL;
+        isStarted = false;  
     }
 
     ~BrowserManager() 
     {
         AddEvent(new Browser::Event(Browser::CLEANUP, NULL));
+        
         while(isStarted) {
             Sleep(10);
         }
+        threadHandle = NULL;
         CloseHandle(updateEvent);
+        delete keyboardManager;
         delete generalUpdate;
     }
 
+private:
+    WebCore *webCore;
+    KeyboardManager *keyboardManager;
+
+    CRITICAL_SECTION cs;
+
+    List<WebView *> webViews;
+    List<Browser::Event *> pendingEvents;
+    Browser::Event *generalUpdate;
+
+    bool isStarted;
+    HANDLE threadHandle;
+    HANDLE updateEvent;
 
 protected:
     // this method should never be called directly
     void BrowserManagerEntry() 
     {
         WebConfig webConfig = WebConfig();
+        webConfig.remote_debugging_port = 1337;
         webCore = WebCore::Initialize(webConfig);
-        UINT maxFps = API->GetMaxFPS();
 
         for(;;) {
 
@@ -139,6 +159,14 @@ protected:
                             webViews.Add(browserEvent->source->CreateWebViewCallback(webCore, webViews.Num()));
                         }
 
+                        browserEvent->Complete();
+                        delete browserEvent;
+                        break;
+                    }
+                case Browser::SCENE_CHANGE:
+                    {
+                        webCore->Update();
+                        browserEvent->source->SceneChangeCallback(webViews.GetElement(browserEvent->webView));
                         browserEvent->Complete();
                         delete browserEvent;
                         break;
@@ -223,17 +251,7 @@ protected:
     }
 
 
-private:
-    WebCore *webCore;
-    CRITICAL_SECTION cs;
 
-    List<WebView *> webViews;
-    List<Browser::Event *> pendingEvents;
-    Browser::Event *generalUpdate;
-
-    bool isStarted;
-    HANDLE threadHandle;
-    HANDLE updateEvent;
 
 public:
     void Startup() 
@@ -259,8 +277,16 @@ public:
         SetEvent(updateEvent);
     }
 
+    void RunAndWait(Browser::EventType eventType, BrowserSource *browserSource, int hWebView) 
+    {
+        Browser::Event *blockingEvent = new Browser::Event(eventType, browserSource, hWebView, true);
+        AddEvent(blockingEvent);
+        WaitForSingleObject(blockingEvent->completionEvent, INFINITE);
+    }
+
     void ShutdownAndWait(BrowserSource *browserSource)
     {
+        RunAndWait(Browser::SHUTDOWN, browserSource, -1);
         Browser::Event *shutdownEvent = new Browser::Event(Browser::SHUTDOWN, browserSource, -1, true);
         AddEvent(shutdownEvent);
         WaitForSingleObject(shutdownEvent->completionEvent, INFINITE);
@@ -270,6 +296,11 @@ public:
     WebCore *GetWebCore() 
     {
         return webCore;
+    }
+
+    KeyboardManager *GetKeyboardManager()
+    {
+        return keyboardManager;
     }
 
 

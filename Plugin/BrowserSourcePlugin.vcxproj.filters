@@ -22,9 +22,6 @@
     <ClInclude Include="resource.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="KeyboardManager.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
     <ClInclude Include="DataSources.h">
       <Filter>Headers</Filter>
     </ClInclude>
@@ -32,6 +29,9 @@
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="SwfReader.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="KeyboardManager.h">
       <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>

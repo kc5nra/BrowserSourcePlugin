@@ -25,7 +25,7 @@ namespace Key
     };
 }
 
-class KeyboardSubscriber 
+class KeyboardListener
 {
 public:
     virtual void KeyboardEvent(Key::Key &key) = 0;
@@ -39,11 +39,10 @@ public:
     static HHOOK hHook;
 
 private:
-    List<KeyboardSubscriber *> subscribers;
+    List<KeyboardListener *> listeners;
     List<DWORD> keyEvents;
     HINSTANCE hinstUser32;
     CRITICAL_SECTION cs;
-    HANDLE keyEvent;
 
 public:
     KeyboardManager() 
@@ -60,26 +59,26 @@ public:
         FreeLibrary(hinstUser32);
     }
 public:
-    void Subscribe(KeyboardSubscriber *subscriber)
+    void AddListener(KeyboardListener *subscriber)
     {
         EnterCriticalSection(&cs);
-        if (!subscribers.HasValue(subscriber)) {
-            subscribers.Add(subscriber);
+        if (!listeners.HasValue(subscriber)) {
+            listeners.Add(subscriber);
         }
         LeaveCriticalSection(&cs);
     }
-    void Unsubscribe(KeyboardSubscriber *subscriber)
+    void RemoveListener(KeyboardListener *subscriber)
     {
         EnterCriticalSection(&cs);
-        subscribers.RemoveItem(subscriber);
+        listeners.RemoveItem(subscriber);
         LeaveCriticalSection(&cs);
     }
 
     void PushKeyEvent(Key::Key key)
     {
         EnterCriticalSection(&cs);
-        for(UINT i = 0; i < subscribers.Num(); i++) {
-            subscribers[i]->KeyboardEvent(key);
+        for(UINT i = 0; i < listeners.Num(); i++) {
+            listeners[i]->KeyboardEvent(key);
         }
         LeaveCriticalSection(&cs);
     }

@@ -36,8 +36,7 @@ private:
 	int id;
 	int hWebView;
 	unsigned int hJSGlobal;
-    bool isDisposed;
-
+    
     BrowserSourceListener *browserSourceListener;
 
     List<DataSourceWithMimeType *> dataSources;
@@ -52,6 +51,7 @@ public:
     // ImageSource
 	void Tick(float fSeconds);
     void Render(const Vect2 &pos, const Vect2 &size);
+    void ChangeScene();
     void UpdateSettings();
     Vect2 GetSize() const;
     int GetWebView() { return hWebView; }
@@ -60,6 +60,6 @@ public:
 public:
 	Awesomium::WebView *CreateWebViewCallback(Awesomium::WebCore *webCore, const int hWebView);
 	void UpdateCallback(Awesomium::WebView *webView);
-	
+	void SceneChangeCallback(Awesomium::WebView *webView);
 	
 };

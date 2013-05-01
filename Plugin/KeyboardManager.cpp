@@ -54,8 +54,8 @@ KeyboardManager::LowLevelKeyboardProc(
 
         key.vkCode = kb->vkCode;
 
-        //KeyboardManager *keyboardManager = BrowserSourcePlugin::instance->GetBrowserManager()->GetKeyboardManager();
-        //keyboardManager->PushKeyEvent(key);
+        KeyboardManager *keyboardManager = BrowserSourcePlugin::instance->GetBrowserManager()->GetKeyboardManager();
+        keyboardManager->PushKeyEvent(key);
 
     }
 
