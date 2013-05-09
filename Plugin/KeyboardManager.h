@@ -6,7 +6,7 @@
 #include "OBSApi.h"
 #include "windows.h"
 
-namespace Key 
+namespace Keyboard
 {
     enum EventType 
     {
@@ -16,10 +16,6 @@ namespace Key
 
     struct Key 
     {
-        bool control;
-        bool shift;
-        bool alt;
-        bool capslock;
         EventType type;
         DWORD vkCode;
     };
@@ -28,7 +24,7 @@ namespace Key
 class KeyboardListener
 {
 public:
-    virtual void KeyboardEvent(Key::Key &key) = 0;
+    virtual void KeyboardEvent(Keyboard::Key &key) = 0;
 };
 
 class KeyboardManager 
@@ -40,46 +36,89 @@ public:
 
 private:
     List<KeyboardListener *> listeners;
-    List<DWORD> keyEvents;
-    HINSTANCE hinstUser32;
-    CRITICAL_SECTION cs;
+    CRITICAL_SECTION listenerLock;
 
 public:
     KeyboardManager() 
     {
-        InitializeCriticalSection(&cs);
-        hinstUser32 = LoadLibrary(L"user32.dll");
+        InitializeCriticalSection(&listenerLock);
+        HINSTANCE hinstUser32 = LoadLibrary(L"user32.dll");
         hHook = 0;
         hHook = SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc, hinstUser32, 0 );
+        if (hinstUser32) {
+            FreeLibrary(hinstUser32);
+        }
     }
 
     ~KeyboardManager()
     {
-        UnhookWindowsHookEx(hHook);
-        FreeLibrary(hinstUser32);
+        if (hHook) {
+            UnhookWindowsHookEx(hHook);
+        }
     }
 public:
-    void AddListener(KeyboardListener *subscriber)
+    void AddListener(KeyboardListener *listener)
     {
-        EnterCriticalSection(&cs);
-        if (!listeners.HasValue(subscriber)) {
-            listeners.Add(subscriber);
+        EnterCriticalSection(&listenerLock);
+        if (!listeners.HasValue(listener)) {
+            listeners.Add(listener);
         }
-        LeaveCriticalSection(&cs);
+        LeaveCriticalSection(&listenerLock);
     }
-    void RemoveListener(KeyboardListener *subscriber)
+    void RemoveListener(KeyboardListener *listener)
     {
-        EnterCriticalSection(&cs);
-        listeners.RemoveItem(subscriber);
-        LeaveCriticalSection(&cs);
+        EnterCriticalSection(&listenerLock);
+        listeners.RemoveItem(listener);
+        LeaveCriticalSection(&listenerLock);
     }
 
-    void PushKeyEvent(Key::Key key)
+    void PushKeyEvent(Keyboard::Key key)
     {
-        EnterCriticalSection(&cs);
+        EnterCriticalSection(&listenerLock);
         for(UINT i = 0; i < listeners.Num(); i++) {
             listeners[i]->KeyboardEvent(key);
         }
-        LeaveCriticalSection(&cs);
+        LeaveCriticalSection(&listenerLock);
     }
 };
+
+
+/*
+
+
+    void KeyboardEvent(Key::Key &key)
+    {
+        EnterCriticalSection(&keyLock);
+        keyboardEvents.Add(key);
+        LeaveCriticalSection(&keyLock);
+    }
+
+    JSArray GetKeyEvents() 
+    {
+        EnterCriticalSection(&keyLock);
+        JSArray jsArray;
+        while(keyboardEvents.Num())
+        {
+            Key::Key &key = keyboardEvents[0];
+            JSArray args;
+            args.Push(JSValue(key.alt));
+            args.Push(JSValue(key.shift));
+            args.Push(JSValue(key.control));
+            args.Push(JSValue(key.capslock));
+            args.Push(JSValue(key.type));
+            args.Push(JSValue((int)key.vkCode));
+            jsArray.Push(args);
+            keyboardEvents.Remove(0);
+        }
+        LeaveCriticalSection(&keyLock);
+        return jsArray;
+    }
+
+    void ClearKeyEvents()
+    {
+        EnterCriticalSection(&keyLock);
+        keyboardEvents.Clear();
+        LeaveCriticalSection(&keyLock);
+    }
+
+    */

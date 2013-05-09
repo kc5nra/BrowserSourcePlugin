@@ -4,7 +4,15 @@
     <ClCompile Include="BrowserSource.cpp" />
     <ClCompile Include="BrowserSourcePlugin.cpp" />
     <ClCompile Include="SwfReader.cpp" />
-    <ClCompile Include="KeyboardManager.cpp" />
+    <ClCompile Include="AudioPlayerExtension.cpp">
+      <Filter>Extensions</Filter>
+    </ClCompile>
+    <ClCompile Include="KeyboardExtension.cpp">
+      <Filter>Extensions</Filter>
+    </ClCompile>
+    <ClCompile Include="KeyboardManager.cpp">
+      <Filter>Extensions</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BrowserManager.h">
@@ -31,8 +39,17 @@
     <ClInclude Include="SwfReader.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="KeyboardManager.h">
+    <ClInclude Include="JavascriptExtension.h">
       <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="AudioPlayerExtension.h">
+      <Filter>Extensions</Filter>
+    </ClInclude>
+    <ClInclude Include="KeyboardExtension.h">
+      <Filter>Extensions</Filter>
+    </ClInclude>
+    <ClInclude Include="KeyboardManager.h">
+      <Filter>Extensions</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -41,6 +58,9 @@
     </Filter>
     <Filter Include="Resources">
       <UniqueIdentifier>{eaab4fe5-9b27-442c-8663-4d24313a0f10}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Extensions">
+      <UniqueIdentifier>{ed63c11c-4b7e-4294-8c69-b4415ca802b1}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

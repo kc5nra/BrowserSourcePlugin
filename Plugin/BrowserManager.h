@@ -1,15 +1,19 @@
 #pragma once
 
 #include <windows.h>
+
 #include "OBSApi.h"
 #include "BrowserSource.h"
+
+#include "JavascriptExtension.h"
+#include "AudioPlayerExtension.h"
+#include "KeyboardExtension.h"
 
 #include <Awesomium\WebCore.h>
 #include <Awesomium\WebView.h>
 #include <Awesomium\WebURL.h>
 #include <Awesomium\STLHelpers.h>
 #include <Awesomium\BitmapSurface.h>
-#include <Awesomium\DataPak.h>
 
 using namespace Awesomium;
 
@@ -78,18 +82,38 @@ public:
         return 0;
     }
 
+
+
+
+private:
+    WebCore *webCore;
+
+    CRITICAL_SECTION cs;
+
+    List<WebView *> webViews;
+    List<JavascriptExtensionFactory *> javascriptExtensionFactories;
+    List<Browser::Event *> pendingEvents;
+
+    Browser::Event *generalUpdate;
+
+    bool isStarted;
+    HANDLE threadHandle;
+    HANDLE updateEvent;
+
 public:
     BrowserManager() 
     {
         InitializeCriticalSection(&cs);
-
-        keyboardManager = new KeyboardManager();
 
         generalUpdate = new Browser::Event(Browser::UPDATE, NULL);
         updateEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
         threadHandle = NULL;
         webCore = NULL;
         isStarted = false;  
+
+        // setup the default extensions
+        //javascriptExtensionFactories.Add(new AudioPlayerExtensionFactory());
+        //javascriptExtensionFactories.Add(new KeyboardExtensionFactory());
     }
 
     ~BrowserManager() 
@@ -99,25 +123,15 @@ public:
         while(isStarted) {
             Sleep(10);
         }
+
+        for (UINT i = 0; i < javascriptExtensionFactories.Num(); i++) {
+            delete javascriptExtensionFactories[i];
+        }
+
         threadHandle = NULL;
         CloseHandle(updateEvent);
-        delete keyboardManager;
         delete generalUpdate;
     }
-
-private:
-    WebCore *webCore;
-    KeyboardManager *keyboardManager;
-
-    CRITICAL_SECTION cs;
-
-    List<WebView *> webViews;
-    List<Browser::Event *> pendingEvents;
-    Browser::Event *generalUpdate;
-
-    bool isStarted;
-    HANDLE threadHandle;
-    HANDLE updateEvent;
 
 protected:
     // this method should never be called directly
@@ -298,10 +312,9 @@ public:
         return webCore;
     }
 
-    KeyboardManager *GetKeyboardManager()
+    List<JavascriptExtensionFactory *> &GetJavascriptExtensionFactories()
     {
-        return keyboardManager;
+        return javascriptExtensionFactories;
     }
-
 
 };

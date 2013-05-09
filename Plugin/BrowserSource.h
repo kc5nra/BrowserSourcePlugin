@@ -18,7 +18,7 @@ namespace Awesomium {
 }
 
 class DataSourceWithMimeType;
-
+class JavascriptExtension;
 
 struct BrowserSourceConfig;
 
@@ -35,10 +35,13 @@ private:
 	Texture *texture;
 	int id;
 	int hWebView;
+    bool hasRegisteredJavascriptExtensions;
+
 	unsigned int hJSGlobal;
     
     BrowserSourceListener *browserSourceListener;
 
+    List<JavascriptExtension *> javascriptExtensions;
     List<DataSourceWithMimeType *> dataSources;
 	BrowserSourceConfig *config;
 

@@ -11,10 +11,13 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AudioPlayerExtension.h" />
+    <ClInclude Include="JavascriptExtension.h" />
     <ClInclude Include="BrowserManager.h" />
     <ClInclude Include="BrowserSource.h" />
     <ClInclude Include="BrowserSourcePlugin.h" />
     <ClInclude Include="DataSources.h" />
+    <ClInclude Include="KeyboardExtension.h" />
     <ClInclude Include="KeyboardManager.h" />
     <ClInclude Include="Localization.h" />
     <ClInclude Include="MimeTypes.h" />
@@ -22,8 +25,10 @@
     <ClInclude Include="SwfReader.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="AudioPlayerExtension.cpp" />
     <ClCompile Include="BrowserSource.cpp" />
     <ClCompile Include="BrowserSourcePlugin.cpp" />
+    <ClCompile Include="KeyboardExtension.cpp" />
     <ClCompile Include="KeyboardManager.cpp" />
     <ClCompile Include="SwfReader.cpp" />
   </ItemGroup>
