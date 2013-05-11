@@ -1,3 +1,6 @@
+/**
+* John Bradley (jrb@turrettech.com)
+*/
 #pragma once
 
 // generated at Tue Apr 23 21:24:06 JST 2013

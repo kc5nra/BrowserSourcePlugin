@@ -1,3 +1,6 @@
+/**
+* John Bradley (jrb@turrettech.com)
+*/
 #pragma once
 
 #include <windows.h>
@@ -6,8 +9,9 @@
 #include "BrowserSource.h"
 
 #include "JavascriptExtension.h"
-#include "AudioPlayerExtension.h"
-#include "KeyboardExtension.h"
+#include "Extensions\AudioPlayerExtension.h"
+#include "Extensions\KeyboardExtension.h"
+#include "Extensions\IrcExtension.h"
 
 #include <Awesomium\WebCore.h>
 #include <Awesomium\WebView.h>
@@ -114,6 +118,7 @@ public:
         // setup the default extensions
         //javascriptExtensionFactories.Add(new AudioPlayerExtensionFactory());
         //javascriptExtensionFactories.Add(new KeyboardExtensionFactory());
+        javascriptExtensionFactories.Add(new IrcExtensionFactory());
     }
 
     ~BrowserManager() 

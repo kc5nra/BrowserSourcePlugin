@@ -1,8 +1,13 @@
+/**
+* John Bradley (jrb@turrettech.com)
+*/
 #pragma once
 
 #include "OBSApi.h"
+#include "..\JavascriptExtension.h"
+
 #include "KeyboardManager.h"
-#include "JavascriptExtension.h"
+
 
 class KeyboardExtension :
     public JavascriptExtension, public KeyboardListener
@@ -21,7 +26,7 @@ public:
     ~KeyboardExtension();
 
 public:
-    bool Handle(const Awesomium::WebString &functionName, const Awesomium::JSArray &args, JSArray *returnArgs);
+    JSValue Handle(const Awesomium::WebString &functionName, const Awesomium::JSArray &args);
     void KeyboardEvent(Keyboard::Key &key);
 };
 

@@ -1,16 +1,25 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="BrowserSource.cpp" />
-    <ClCompile Include="BrowserSourcePlugin.cpp" />
-    <ClCompile Include="SwfReader.cpp" />
-    <ClCompile Include="AudioPlayerExtension.cpp">
+    <ClCompile Include="Extensions\AudioPlayerExtension.cpp">
       <Filter>Extensions</Filter>
     </ClCompile>
-    <ClCompile Include="KeyboardExtension.cpp">
+    <ClCompile Include="Extensions\KeyboardExtension.cpp">
       <Filter>Extensions</Filter>
     </ClCompile>
-    <ClCompile Include="KeyboardManager.cpp">
+    <ClCompile Include="Extensions\KeyboardManager.cpp">
+      <Filter>Extensions</Filter>
+    </ClCompile>
+    <ClCompile Include="BrowserSource.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="SwfReader.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="BrowserSourcePlugin.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Extensions\IrcExtension.cpp">
       <Filter>Extensions</Filter>
     </ClCompile>
   </ItemGroup>
@@ -42,13 +51,16 @@
     <ClInclude Include="JavascriptExtension.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="AudioPlayerExtension.h">
+    <ClInclude Include="Extensions\AudioPlayerExtension.h">
       <Filter>Extensions</Filter>
     </ClInclude>
-    <ClInclude Include="KeyboardExtension.h">
+    <ClInclude Include="Extensions\KeyboardExtension.h">
       <Filter>Extensions</Filter>
     </ClInclude>
-    <ClInclude Include="KeyboardManager.h">
+    <ClInclude Include="Extensions\KeyboardManager.h">
+      <Filter>Extensions</Filter>
+    </ClInclude>
+    <ClInclude Include="Extensions\IrcExtension.h">
       <Filter>Extensions</Filter>
     </ClInclude>
   </ItemGroup>
@@ -61,6 +73,9 @@
     </Filter>
     <Filter Include="Extensions">
       <UniqueIdentifier>{ed63c11c-4b7e-4294-8c69-b4415ca802b1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source">
+      <UniqueIdentifier>{ae02072f-6531-4e91-9936-6b65b7667895}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

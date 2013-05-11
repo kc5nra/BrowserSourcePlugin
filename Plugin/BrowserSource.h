@@ -5,7 +5,6 @@
 
 #include "OBSApi.h"
 
-#include "KeyboardManager.h"
 #include "Awesomium\JSObject.h"
 
 namespace Awesomium {

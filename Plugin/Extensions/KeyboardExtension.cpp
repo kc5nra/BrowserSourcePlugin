@@ -1,3 +1,6 @@
+/**
+* John Bradley (jrb@turrettech.com)
+*/
 #include "KeyboardExtension.h"
 
 KeyboardManager *
@@ -21,34 +24,32 @@ KeyboardExtension::~KeyboardExtension()
     DeleteCriticalSection(&keyEventLock);
 }
 
-bool 
+JSValue 
 KeyboardExtension::Handle(
     const WebString &functionName,
-    const JSArray &args, 
-    JSArray *returnArgs)
+    const JSArray &args)
 {
-    // [[type, vkCode]..] getKeyEvents()
+    // {events: [[type, vkCode]..] getKeyEvents()
     if (functionName == WSLit("getKeyEvents")) {
         assert(args.size() == 0);
-        assert(returnArgs);
 
         EnterCriticalSection(&keyEventLock);
-        JSArray jsArray;
+        JSArray returnArgs;
         while(keyEvents.Num())
         {
             Keyboard::Key &key = keyEvents[0];
             JSArray args;
             args.Push(JSValue(key.type));
             args.Push(JSValue((int)key.vkCode));
-            returnArgs->Push(args);
+            returnArgs.Push(args);
             keyEvents.Remove(0);
         }
-        
+
         LeaveCriticalSection(&keyEventLock);
-        return true;
+        return returnArgs;
     }
 
-    return false;
+    return JSValue::Undefined();
 }
 
 void 

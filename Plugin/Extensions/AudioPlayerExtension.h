@@ -1,6 +1,9 @@
+/**
+* John Bradley (jrb@turrettech.com)
+*/
 #pragma once
 
-#include "JavascriptExtension.h"
+#include "..\JavascriptExtension.h"
 
 class AudioPlayerExtension : public JavascriptExtension
 {
@@ -8,7 +11,7 @@ class AudioPlayerExtension : public JavascriptExtension
 public:
     AudioPlayerExtension();
 public:
-    bool Handle(const Awesomium::WebString &functionName, const Awesomium::JSArray &args, JSArray *returnArgs);
+    JSValue Handle(const Awesomium::WebString &functionName, const Awesomium::JSArray &args);
 };
 
 class AudioPlayerExtensionFactory : public JavascriptExtensionFactory

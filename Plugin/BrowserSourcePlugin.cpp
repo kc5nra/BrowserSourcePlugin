@@ -2,7 +2,6 @@
 * John Bradley (jrb@turrettech.com)
 */
 
-
 #include "BrowserSourcePlugin.h"
 #include "Localization.h"
 #include "BrowserSource.h"

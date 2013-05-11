@@ -7,7 +7,6 @@
 #include "SwfReader.h"
 #include "DataSources.h"
 #include "MimeTypes.h"
-#include "KeyboardManager.h"
 
 #include <Awesomium\WebCore.h>
 #include <Awesomium\WebView.h>
@@ -23,7 +22,7 @@ using namespace Awesomium;
 #define NO_VIEW -2
 #define PENDING_VIEW -1
 
-class BrowserSource::BrowserSourceListener : public WebViewListener::Load, public JSMethodHandler, public KeyboardListener
+class BrowserSource::BrowserSourceListener : public WebViewListener::Load, public JSMethodHandler
 {
     friend class SceneItem;
 public:
@@ -51,7 +50,14 @@ public: //WebViewListener::Load
         const Awesomium::WebString& methodName,	
         const Awesomium::JSArray& args)
     {
+        List<JavascriptExtension *> &javascriptExtensions = browserSource->javascriptExtensions;
 
+        for(UINT i = 0; i < javascriptExtensions.Num(); i++) {
+            if (javascriptExtensions[i]->Handles(NO_RETURN_ARGUMENT, remoteObjectId, methodName)) {
+                javascriptExtensions[i]->Handle(methodName, args);
+                return;
+            }
+        }
     }
 
     JSValue 
@@ -61,7 +67,13 @@ public: //WebViewListener::Load
         const Awesomium::WebString& methodName, 
         const Awesomium::JSArray& args)
     {
-        
+        List<JavascriptExtension *> &javascriptExtensions = browserSource->javascriptExtensions;
+
+        for(UINT i = 0; i < javascriptExtensions.Num(); i++) {
+            if (javascriptExtensions[i]->Handles(RETURN_ARGUMENT, remoteObjectId, methodName)) {
+                return javascriptExtensions[i]->Handle(methodName, args);
+            }
+        }
         return JSValue::Undefined();
     }
 
@@ -89,6 +101,7 @@ BrowserSource::BrowserSource(XElement *data)
     hWebView = -2;
     hasRegisteredJavascriptExtensions = false;
 
+    browserSourceListener = new BrowserSourceListener(this);
     config = new BrowserSourceConfig(data);
 
     InitializeCriticalSection(&textureLock);
@@ -140,12 +153,14 @@ WebView *BrowserSource::CreateWebViewCallback(WebCore *webCore, const int hWebVi
     BrowserManager *browserManager = BrowserSourcePlugin::instance->GetBrowserManager();
 
     WebPreferences webPreferences;
-    WebString webString = WebString(reinterpret_cast<wchar16 *>(config->customCss.Array()));
-    webPreferences.user_stylesheet = webString;
+    if (config->customCss.Length()) {
+        WebString webString = WebString(reinterpret_cast<wchar16 *>(config->customCss.Array()));
+        webPreferences.user_stylesheet = webString;
+    }
     webPreferences.enable_web_gl = true;
     WebSession *webSession;
     webSession = webCore->CreateWebSession(WSLit("plugins\\BrowserSourcePlugin\\cache"), webPreferences);
-
+  
     for (UINT i = 0; i < dataSources.Num(); i++) {
         delete dataSources[i];
     }
@@ -184,7 +199,9 @@ WebView *BrowserSource::CreateWebViewCallback(WebCore *webCore, const int hWebVi
         webView->set_load_listener(browserSourceListener);
     }
 
-    webString = WebString(reinterpret_cast<const wchar16 *>(config->url.Array()));
+    assert(config->url.Length());
+
+    WebString webString = WebString(reinterpret_cast<const wchar16 *>(config->url.Array()));
     WebURL url(webString);
     webView->LoadURL(url);
 

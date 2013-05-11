@@ -1,8 +1,10 @@
 /**
 * John Bradley (jrb@turrettech.com)
 */
+#include "..\BrowserSourcePlugin.h"
+
 #include "KeyboardManager.h"
-#include "BrowserSourcePlugin.h"
+
 
 // global
 HHOOK KeyboardManager::hHook;

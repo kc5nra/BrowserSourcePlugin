@@ -1,3 +1,6 @@
+/**
+* John Bradley (jrb@turrettech.com)
+*/
 #pragma once
 
 #include <Awesomium\WebView.h>
@@ -80,7 +83,7 @@ public:
         return false;
     }
 
-    virtual bool Handle(const WebString &functionName, const JSArray &args, JSArray *returnArgs)=0;
+    virtual JSValue Handle(const WebString &functionName, const JSArray &args)=0;
 };
 
 class JavascriptExtensionFactory {

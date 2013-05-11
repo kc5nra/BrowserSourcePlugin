@@ -1,3 +1,6 @@
+/**
+* John Bradley (jrb@turrettech.com)
+*/
 #include "AudioPlayerExtension.h"
 
 #include <Awesomium\STLHelpers.h>
@@ -17,12 +20,11 @@ AudioPlayerExtension::AudioPlayerExtension()
 }
 
     
-bool 
+JSValue 
 AudioPlayerExtension::Handle(
     const WebString &functionName,
-    const JSArray &args, 
-    JSArray *returnArgs)
+    const JSArray &args)
 {
-    return false;
+    return JSValue::Undefined();
 }
 
