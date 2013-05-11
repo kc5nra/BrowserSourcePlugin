@@ -157,14 +157,19 @@ protected:
                 switch(browserEvent->eventType) {
                 case Browser::CREATE_VIEW: 
                     {
+                        int insertIndex = -1;
+
                         if (browserEvent->webView >= 0) {
                             WebView *webView = webViews.GetElement(browserEvent->webView);
                             webView->Destroy();
                             webViews.Remove(browserEvent->webView);
                             webViews.Insert(browserEvent->webView, NULL);
+
+                            // reuse the index we just deleted
+                            insertIndex = browserEvent->webView;
                         }
 
-                        int insertIndex = -1;
+                        
                         for(UINT i = 0; i < webViews.Num(); i++) {
                             if (webViews.GetElement(i) == NULL) {
                                 insertIndex = i;
@@ -306,9 +311,6 @@ public:
     void ShutdownAndWait(BrowserSource *browserSource)
     {
         RunAndWait(Browser::SHUTDOWN, browserSource, -1);
-        Browser::Event *shutdownEvent = new Browser::Event(Browser::SHUTDOWN, browserSource, -1, true);
-        AddEvent(shutdownEvent);
-        WaitForSingleObject(shutdownEvent->completionEvent, INFINITE);
     }
 
 public:
