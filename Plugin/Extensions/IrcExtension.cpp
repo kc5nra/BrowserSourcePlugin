@@ -3,6 +3,7 @@
 */
 #include "IrcExtension.h"
 
+#include <time.h>
 #include <process.h>
 #include <Awesomium\STLHelpers.h>
 #include <Awesomium\JSValue.h>
@@ -36,6 +37,7 @@ IrcThread(void* threadArgs)
     char *serverNameUtf8 = CreateUTF8(serverName);
     
     char nickName[16] = { 0 };
+    srand((unsigned int)time(NULL));
     sprintf((char *)&nickName, "justinfan%d", rand() % 999999);
     context->SetNickName(nickName);
     

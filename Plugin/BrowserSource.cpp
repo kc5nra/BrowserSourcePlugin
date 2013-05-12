@@ -242,6 +242,26 @@ void BrowserSource::SceneChangeCallback(WebView *webView)
     }
 }
 
+#ifdef INTERACTION_SUPPORT // remove when implemented
+void BrowserSource::InteractionCallback(WebView *webView, Interaction &interaction)
+{
+    webView->Focus();
+    if (interaction.type & 0x80) {
+        Vect2 scale = interaction.renderSize / browserSize;
+        float x = interaction.data.pos.x / scale.x;
+        float y = interaction.data.pos.y / scale.y;
+        
+        if (interaction.type == Interaction::MOUSE_MOVE) {
+            webView->InjectMouseMove((int)x, (int)y);
+        } else if (interaction.type == Interaction::MOUSE_LBUTTONUP) {
+            webView->InjectMouseMove((int)x, (int)y);
+            webView->InjectMouseDown(kMouseButton_Left);
+            webView->InjectMouseUp(kMouseButton_Left);
+        }
+    }
+}
+#endif INTERACTION_SUPPORT // remove when implemented
+
 void BrowserSource::Render(const Vect2 &pos, const Vect2 &size)
 {
     BrowserManager *browserManager = BrowserSourcePlugin::instance->GetBrowserManager();	
@@ -257,6 +277,17 @@ void BrowserSource::Render(const Vect2 &pos, const Vect2 &size)
         LeaveCriticalSection(&textureLock);
     }
 }
+
+#ifdef INTERACTION_SUPPORT // remove when implemented
+void BrowserSource::ProcessInteraction(Interaction &interaction)
+{
+    BrowserManager *browserManager = BrowserSourcePlugin::instance->GetBrowserManager();
+    
+    Browser::Event *browserEvent = new Browser::Event(Browser::INTERACTION, this, hWebView);
+    browserEvent->info = new Interaction(interaction);
+    browserManager->AddEvent(browserEvent);
+}
+#endif INTERACTION_SUPPORT // remove when implemented
 
 void BrowserSource::ChangeScene() 
 {

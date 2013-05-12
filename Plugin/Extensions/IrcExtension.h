@@ -14,8 +14,8 @@ class IrcExtension :
 
 private:
     HANDLE hThread;
-    irc_callbacks_t callbacks;
     irc_session_t *session;
+    irc_callbacks_t callbacks;
 
     String nickName;
     WebString channelName;

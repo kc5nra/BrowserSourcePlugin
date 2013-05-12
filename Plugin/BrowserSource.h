@@ -53,6 +53,11 @@ public:
     // ImageSource
 	void Tick(float fSeconds);
     void Render(const Vect2 &pos, const Vect2 &size);
+    
+#ifdef INTERACTION_SUPPORT // remove when implemented
+    void ProcessInteraction(Interaction &interaction);
+#endif INTERACTION_SUPPORT // remove when implemented
+
     void ChangeScene();
     void UpdateSettings();
     Vect2 GetSize() const;
@@ -63,5 +68,9 @@ public:
 	Awesomium::WebView *CreateWebViewCallback(Awesomium::WebCore *webCore, const int hWebView);
 	void UpdateCallback(Awesomium::WebView *webView);
 	void SceneChangeCallback(Awesomium::WebView *webView);
-	
+
+#ifdef INTERACTION_SUPPORT // remove when implemented
+    void BrowserSource::InteractionCallback(Awesomium::WebView *webView, Interaction &interaction);
+#endif INTERACTION_SUPPORT // remove when implemented
+
 };

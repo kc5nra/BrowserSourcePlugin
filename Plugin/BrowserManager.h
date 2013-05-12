@@ -28,6 +28,7 @@ namespace Browser
         UPDATE,
         CREATE_VIEW,
         SCENE_CHANGE,
+        INTERACTION,
         SHUTDOWN,
         CLEANUP
     };
@@ -51,6 +52,10 @@ namespace Browser
             if (completionEvent) {
                 CloseHandle(this->completionEvent);
             }
+
+            if (info) {
+                Free(info);
+            }
         }
 
         void Complete() 
@@ -72,6 +77,7 @@ namespace Browser
         BrowserSource *source;
         int webView;
         HANDLE completionEvent;
+        void *info;
     };
 }
 
@@ -163,20 +169,19 @@ protected:
                             WebView *webView = webViews.GetElement(browserEvent->webView);
                             webView->Destroy();
                             webViews.Remove(browserEvent->webView);
-                            webViews.Insert(browserEvent->webView, NULL);
-
+                            
                             // reuse the index we just deleted
                             insertIndex = browserEvent->webView;
-                        }
-
-                        
-                        for(UINT i = 0; i < webViews.Num(); i++) {
-                            if (webViews.GetElement(i) == NULL) {
-                                insertIndex = i;
-                                webViews.Remove(i);
-                                break;
+                        } else {
+                            for(UINT i = 0; i < webViews.Num(); i++) {
+                                if (webViews.GetElement(i) == NULL) {
+                                    insertIndex = i;
+                                    webViews.Remove(i);
+                                    break;
+                                }
                             }
                         }
+
                         if (insertIndex >= 0) {
                             webViews.Insert(insertIndex, browserEvent->source->CreateWebViewCallback(webCore, insertIndex));
                         } else {
@@ -194,6 +199,17 @@ protected:
                         browserEvent->Complete();
                         delete browserEvent;
                         break;
+                    }
+                case Browser::INTERACTION:
+                    {
+#ifdef INTERACTION_SUPPORT // remove when implemented
+                        WebView *webView = webViews.GetElement(browserEvent->webView);
+                        Interaction *interaction = static_cast<Interaction *>(browserEvent->info);
+                        browserEvent->source->InteractionCallback(webView, *interaction);
+                        delete browserEvent;
+#endif INTERACTION_SUPPORT // remove when implemented
+                        break;
+
                     }
                 case Browser::UPDATE:
                     {
