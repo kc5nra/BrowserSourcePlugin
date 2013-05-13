@@ -4,6 +4,7 @@
 #pragma once
 
 #include <windows.h>
+#include <process.h>
 
 #include "OBSApi.h"
 #include "BrowserSource.h"
@@ -85,15 +86,13 @@ class BrowserManager
 {
 
 public:
-
-    static DWORD WINAPI BrowserManagerEntry(LPVOID self) 
+    static unsigned __stdcall 
+    BrowserManagerEntry(void* threadArgs) 
     {
-        (static_cast<BrowserManager *>(self))->BrowserManagerEntry();
+        (static_cast<BrowserManager *>(threadArgs))->BrowserManagerEntry();
+        _endthreadex(0);
         return 0;
     }
-
-
-
 
 private:
     WebCore *webCore;
@@ -107,7 +106,7 @@ private:
     Browser::Event *generalUpdate;
 
     bool isStarted;
-    HANDLE threadHandle;
+    HANDLE hThread;
     HANDLE updateEvent;
 
 public:
@@ -117,7 +116,7 @@ public:
 
         generalUpdate = new Browser::Event(Browser::UPDATE, NULL);
         updateEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
-        threadHandle = NULL;
+        hThread = NULL;
         webCore = NULL;
         isStarted = false;  
 
@@ -129,17 +128,22 @@ public:
 
     ~BrowserManager() 
     {
-        AddEvent(new Browser::Event(Browser::CLEANUP, NULL));
-        
-        while(isStarted) {
-            Sleep(10);
+        RunAndWait(Browser::CLEANUP, NULL, 0);
+
+        // this is overkill
+        // but make sure the thread has completed
+        if (hThread) {
+            WaitForSingleObject(hThread, INFINITE);
+            CloseHandle(hThread);
+            hThread = NULL;
         }
+
+        assert(!isStarted);
 
         for (UINT i = 0; i < javascriptExtensionFactories.Num(); i++) {
             delete javascriptExtensionFactories[i];
         }
 
-        threadHandle = NULL;
         CloseHandle(updateEvent);
         delete generalUpdate;
     }
@@ -169,7 +173,7 @@ protected:
                             WebView *webView = webViews.GetElement(browserEvent->webView);
                             webView->Destroy();
                             webViews.Remove(browserEvent->webView);
-                            
+
                             // reuse the index we just deleted
                             insertIndex = browserEvent->webView;
                         } else {
@@ -267,21 +271,32 @@ protected:
                 case Browser::CLEANUP:
                     {
                         while(webViews.Num()) {
+                            // by the time we get here,  everything should already be shut down
                             WebView *webView = webViews.GetElement(0);
                             webViews.Remove(0);
                             if (webView) {
+                                webView->LoadURL(WebURL(WSLit("about:blank")));
+                                // fixes a bug in awesomium where if you destroy it while a flash application
+                                // is running it may fail when doing in the future.
+                                while(webView->IsLoading()) {
+                                    webCore->Update();
+                                    Sleep(20);
+                                }
                                 webView->Destroy();
                             }
                         }
 
                         webCore->Shutdown();
 
+                        isStarted = false;
+
                         browserEvent->Complete();
                         delete browserEvent;
-                        isStarted = false;
+
                         return;
                     }
                 }
+
                 EnterCriticalSection(&cs);
                 pendingEvents.Remove(0);
                 LeaveCriticalSection(&cs);
@@ -298,7 +313,7 @@ public:
     {
         if (!isStarted) {
             isStarted = true;
-            threadHandle = ::CreateThread(0, 0, BrowserManagerEntry, this, 0, 0);
+            hThread = (HANDLE)_beginthreadex(NULL, 0, BrowserManagerEntry, this, 0, NULL);
         }	
     }
 
@@ -319,9 +334,11 @@ public:
 
     void RunAndWait(Browser::EventType eventType, BrowserSource *browserSource, int hWebView) 
     {
-        Browser::Event *blockingEvent = new Browser::Event(eventType, browserSource, hWebView, true);
-        AddEvent(blockingEvent);
-        WaitForSingleObject(blockingEvent->completionEvent, INFINITE);
+        if (isStarted) {
+            Browser::Event *blockingEvent = new Browser::Event(eventType, browserSource, hWebView, true);
+            AddEvent(blockingEvent);
+            WaitForSingleObject(blockingEvent->completionEvent, INFINITE);
+        }
     }
 
     void ShutdownAndWait(BrowserSource *browserSource)

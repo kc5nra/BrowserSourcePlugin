@@ -22,8 +22,7 @@ char *CreateUTF8(WebString &webString)
     return string;
 }
 
-unsigned __stdcall 
-IrcThread(void* threadArgs)
+unsigned __stdcall IrcThread(void* threadArgs)
 {
     IrcExtension *context = (IrcExtension *)threadArgs;
 
@@ -31,27 +30,27 @@ IrcThread(void* threadArgs)
     WebString &channelName = context->GetChannelName();
 
     irc_option_set(session, LIBIRC_OPTION_STRIPNICKS);
-    
+
     WebString serverName = channelName;
     serverName.Append(WSLit(".jtvirc.com"));
     char *serverNameUtf8 = CreateUTF8(serverName);
-    
+
     char nickName[16] = { 0 };
     srand((unsigned int)time(NULL));
     sprintf((char *)&nickName, "justinfan%d", rand() % 999999);
     context->SetNickName(nickName);
-    
+
     if (irc_connect(session, serverNameUtf8, 6667, 0, nickName, 0, 0))
-	{
-		Log(TEXT("IrcThread() Could not connect: %s"), irc_strerror(irc_errno(session)));
+    {
+        Log(TEXT("IrcThread() Could not connect: %s"), irc_strerror(irc_errno(session)));
         goto end_thread;
-	}
+    }
 
     // and run into forever loop, generating events
-	if (irc_run (session))
-	{
-		Log(TEXT("IrcThread() Could not connect or I/O error: %s"), irc_strerror(irc_errno(session)));
-	}
+    if (irc_run (session))
+    {
+        Log(TEXT("IrcThread() Could not connect or I/O error: %s"), irc_strerror(irc_errno(session)));
+    }
 
 end_thread:
     Free(serverNameUtf8);
@@ -59,8 +58,7 @@ end_thread:
     return 0;   
 }
 
-void 
-event_connect(
+void event_connect(
     irc_session_t *session, 
     const char *eventType,
     const char *origin, 
@@ -68,7 +66,7 @@ event_connect(
     unsigned int count)
 {
     IrcExtension *context = (IrcExtension *)(irc_get_ctx(session));
-    
+
     WebString channel;
     channel.Append(WSLit("#"));
     channel.Append(context->GetChannelName());
@@ -78,16 +76,15 @@ event_connect(
     Free(channelNameUtf8);
 }
 
-void 
-event_join(
+void event_join(
     irc_session_t *session, 
     const char *eventType, 
     const char *origin, 
     const char **params, 
     unsigned int count)
 {
-	if ( !origin || count != 1)
-		return;
+    if ( !origin || count != 1)
+        return;
 
     IrcExtension *context = (IrcExtension *)(irc_get_ctx(session));
 
@@ -98,16 +95,15 @@ event_join(
     }   
 }
 
-void 
-event_channel(
+void event_channel(
     irc_session_t *session, 
     const char *eventType, 
     const char *origin, 
     const char **params, 
     unsigned int count)
 {
-	if ( !origin || count != 2 )
-		return;
+    if ( !origin || count != 2 )
+        return;
 
     IrcExtension *context = (IrcExtension *)(irc_get_ctx(session));
 
@@ -126,7 +122,7 @@ IrcExtension::IrcExtension()
     noReturnArgumentFunctions.Push(WSLit("disconnect"));
     returnArgumentFunctions.Push(WSLit("getMessages"));
     returnArgumentFunctions.Push(WSLit("isConnected()"));
-    
+
     memset(&callbacks, 0, sizeof(callbacks));
 
     callbacks.event_connect = event_connect;
@@ -144,16 +140,18 @@ IrcExtension::IrcExtension()
 
 IrcExtension::~IrcExtension()
 {
-    irc_destroy_session(session);
-
     if (hThread) {
+        irc_disconnect(session);
         WaitForSingleObject(hThread, INFINITE);
         CloseHandle(hThread);
         hThread = NULL;
     }
+
+    irc_destroy_session(session);
+
+
 }
-JSValue 
-IrcExtension::Handle(
+JSValue IrcExtension::Handle(
     const WebString &functionName,
     const JSArray &args)
 {
@@ -163,11 +161,11 @@ IrcExtension::Handle(
         if (irc_is_connected(session)) {
             return JSValue::Undefined();
         }
-        
+
         if (hThread) {
             // thread finished?
             if (WaitForSingleObject(hThread, 0) == WAIT_OBJECT_0) {
-                CloseHandle(hThread);
+                CloseHandle(hThread);	
                 hThread = NULL;
             } else {
                 // thread is still running
@@ -186,7 +184,7 @@ IrcExtension::Handle(
 
         return JSValue::Undefined();
 
-    // disconnect()
+        // disconnect()
     } else if (functionName == WSLit("disconnect")) {
         irc_disconnect(session);
 
@@ -200,11 +198,11 @@ IrcExtension::Handle(
 
         return JSValue::Undefined();
 
-    // [message, message, ..] getMessages()
+        // [message, message, ..] getMessages()
     } else if (functionName == WSLit("getMessages")) {
         EnterCriticalSection(&messageLock);
         assert(args.size() == 0);
-        
+
         JSArray returnArgs;
 
         while(messages.Num()) {
@@ -212,7 +210,7 @@ IrcExtension::Handle(
             returnArgs.Push(WebString::CreateFromUTF8(utf8String, strlen(utf8String)));
             messages.Remove(0);
         }
-        
+
         LeaveCriticalSection(&messageLock);
 
         return returnArgs;
