@@ -121,6 +121,7 @@ BOOL CALLBACK DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 			if (hmodAvFormat) FreeLibrary(hmodAvFormat);
 			if (hmodAvCodec) FreeLibrary(hmodAvCodec);
 			if (hmodAvUtil) FreeLibrary(hmodAvUtil);
+
 			break;
  
 	}

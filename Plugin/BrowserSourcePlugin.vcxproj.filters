@@ -77,6 +77,9 @@
     <Filter Include="Source">
       <UniqueIdentifier>{ae02072f-6531-4e91-9936-6b65b7667895}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Utilities">
+      <UniqueIdentifier>{c219fcfc-1118-45c4-b8d4-9dcc229d9c8e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="BrowserSourcePlugin.rc">

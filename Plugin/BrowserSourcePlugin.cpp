@@ -11,7 +11,6 @@
 #include "SciLexer.h"
 #include <Awesomium\WebCore.h>
 
-
 HINSTANCE BrowserSourcePlugin::hinstDLL = NULL;
 BrowserSourcePlugin *BrowserSourcePlugin::instance = NULL;
 
@@ -577,8 +576,6 @@ CTSTR GetPluginDescription()
 {
     return STR("PluginDescription");
 }
-
-
 
 BOOL CALLBACK DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {

@@ -3,58 +3,60 @@
 */
 #pragma once
 
-#include "OBSApi.h"
-#include "..\JavascriptExtension.h"
+#include <string>
+#include <vector>
 
 #include "libircclient.h"
+#include "..\JavascriptExtension.h"
 
 class IrcExtension :
-    public JavascriptExtension
+	public JavascriptExtension
 {
 
 private:
-    HANDLE hThread;
-    irc_session_t *session;
-    irc_callbacks_t callbacks;
+	HANDLE hThread;
+	irc_session_t *session;
+	irc_callbacks_t callbacks;
 
-    String nickName;
-    WebString channelName;
-    StringList messages;
+	std::string nickName;
+	std::string channelName;
+	std::vector<std::string> messages;
 
-    bool isJoinedChannel;
-    
-    CRITICAL_SECTION messageLock;
+	bool isJoinedChannel;
 
-public:
-    IrcExtension();
-    ~IrcExtension();
+	CRITICAL_SECTION messageLock;
 
 public:
-    void AddMessage(String &string) {
-        EnterCriticalSection(&messageLock);
-        messages.Add(string);
-        LeaveCriticalSection(&messageLock);
-    }
+	IrcExtension();
+	virtual ~IrcExtension();
 
 public:
-    irc_session_t *GetSesssion() { return session; }
-    WebString &GetChannelName() { return channelName; }
-    
-    String &GetNickName() { return nickName; }
-    void SetNickName(char *nickName) { this->nickName = nickName; }
-
-    bool IsJoinedChannel() { return isJoinedChannel; }
-    void SetJoinedChannel(bool isJoinedChannel) { this->isJoinedChannel = isJoinedChannel; }
+	void AddMessage(std::string &string) {
+		EnterCriticalSection(&messageLock);
+		messages.push_back(string);
+		LeaveCriticalSection(&messageLock);
+	}
 
 public:
-    JSValue Handle(const Awesomium::WebString &functionName, const Awesomium::JSArray &args);
+	irc_session_t *GetSession() { return session; }
+
+	std::string &GetChannelName() { return channelName; }
+
+	std::string &GetNickName() { return nickName; }
+	void SetNickName(std::string &nickName) { this->nickName = nickName; }
+
+	bool IsJoinedChannel() { return isJoinedChannel; }
+	void SetJoinedChannel(bool isJoinedChannel) { this->isJoinedChannel = isJoinedChannel; }
+
+public:
+	JSValue Handle(const Awesomium::WebString &functionName, const Awesomium::JSArray &args);
 };
 
 class IrcExtensionFactory : public JavascriptExtensionFactory
 {
 
 public:
-    JavascriptExtension *Create() {
-        return new IrcExtension();
-    }
+	JavascriptExtension *Create() {
+		return new IrcExtension();
+	}
 };

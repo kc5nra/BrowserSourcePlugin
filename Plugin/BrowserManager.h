@@ -99,9 +99,9 @@ private:
 
     CRITICAL_SECTION cs;
 
-    List<WebView *> webViews;
-    List<JavascriptExtensionFactory *> javascriptExtensionFactories;
-    List<Browser::Event *> pendingEvents;
+    std::vector<WebView *> webViews;
+    std::vector<JavascriptExtensionFactory *> javascriptExtensionFactories;
+    std::vector<Browser::Event *> pendingEvents;
 
     Browser::Event *generalUpdate;
 
@@ -112,7 +112,7 @@ private:
 public:
     BrowserManager() 
     {
-        InitializeCriticalSection(&cs);
+		InitializeCriticalSection(&cs);
 
         generalUpdate = new Browser::Event(Browser::UPDATE, NULL);
         updateEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -123,7 +123,7 @@ public:
         // setup the default extensions
         //javascriptExtensionFactories.Add(new AudioPlayerExtensionFactory());
         //javascriptExtensionFactories.Add(new KeyboardExtensionFactory());
-        javascriptExtensionFactories.Add(new IrcExtensionFactory());
+        javascriptExtensionFactories.push_back(new IrcExtensionFactory());
     }
 
     ~BrowserManager() 
@@ -140,7 +140,7 @@ public:
 
         assert(!isStarted);
 
-        for (UINT i = 0; i < javascriptExtensionFactories.Num(); i++) {
+        for (UINT i = 0; i < javascriptExtensionFactories.size(); i++) {
             delete javascriptExtensionFactories[i];
         }
 
@@ -159,9 +159,9 @@ protected:
         for(;;) {
 
             WaitForSingleObject(updateEvent, INFINITE);
-            while(pendingEvents.Num()) {
+            while(pendingEvents.size()) {
                 EnterCriticalSection(&cs);
-                Browser::Event *browserEvent = pendingEvents.GetElement(0);
+                Browser::Event *browserEvent = pendingEvents[0];
                 LeaveCriticalSection(&cs);
 
                 switch(browserEvent->eventType) {
@@ -170,26 +170,26 @@ protected:
                         int insertIndex = -1;
 
                         if (browserEvent->webView >= 0) {
-                            WebView *webView = webViews.GetElement(browserEvent->webView);
+                            WebView *webView = webViews[browserEvent->webView];
                             webView->Destroy();
-                            webViews.Remove(browserEvent->webView);
+                            webViews.erase(webViews.begin() + browserEvent->webView);
 
                             // reuse the index we just deleted
                             insertIndex = browserEvent->webView;
                         } else {
-                            for(UINT i = 0; i < webViews.Num(); i++) {
-                                if (webViews.GetElement(i) == NULL) {
+                            for(UINT i = 0; i < webViews.size(); i++) {
+                                if (webViews[i] == NULL) {
                                     insertIndex = i;
-                                    webViews.Remove(i);
+                                    webViews.erase(webViews.begin() + i);
                                     break;
                                 }
                             }
                         }
 
                         if (insertIndex >= 0) {
-                            webViews.Insert(insertIndex, browserEvent->source->CreateWebViewCallback(webCore, insertIndex));
+                            webViews.insert(webViews.begin() + insertIndex, browserEvent->source->CreateWebViewCallback(webCore, insertIndex));
                         } else {
-                            webViews.Add(browserEvent->source->CreateWebViewCallback(webCore, webViews.Num()));
+                            webViews.push_back(browserEvent->source->CreateWebViewCallback(webCore, webViews.size()));
                         }
 
                         browserEvent->Complete();
@@ -199,7 +199,7 @@ protected:
                 case Browser::SCENE_CHANGE:
                     {
                         webCore->Update();
-                        browserEvent->source->SceneChangeCallback(webViews.GetElement(browserEvent->webView));
+                        browserEvent->source->SceneChangeCallback(webViews[browserEvent->webView]);
                         browserEvent->Complete();
                         delete browserEvent;
                         break;
@@ -207,7 +207,7 @@ protected:
                 case Browser::INTERACTION:
                     {
 #ifdef INTERACTION_SUPPORT // remove when implemented
-                        WebView *webView = webViews.GetElement(browserEvent->webView);
+                        WebView *webView = webViews[browserEvent->webView];
                         Interaction *interaction = static_cast<Interaction *>(browserEvent->info);
                         browserEvent->source->InteractionCallback(webView, *interaction);
                         delete browserEvent;
@@ -220,7 +220,7 @@ protected:
                         webCore->Update();
 
                         if (browserEvent->source) {
-                            browserEvent->source->UpdateCallback(webViews.GetElement(browserEvent->webView));
+                            browserEvent->source->UpdateCallback(webViews[browserEvent->webView]);
                             browserEvent->Complete();
                             delete browserEvent;
                             break;
@@ -234,7 +234,7 @@ protected:
                         if (browserEvent->source->GetWebView() >= 0) {
 
                             int hWebView = browserEvent->source->GetWebView();
-                            WebView *webView = (hWebView >= 0) ? webViews[hWebView] : NULL;
+                            WebView *webView = (hWebView >= 0) ? webViews[hWebView] : nullptr;
                             if (webView) {
                                 webView->LoadURL(WebURL(WSLit("about:blank")));
                                 // fixes a bug in awesomium where if you destroy it while a flash application
@@ -244,17 +244,17 @@ protected:
                                     Sleep(20);
                                 }
                                 webView->Destroy();
-                                webViews.Remove(hWebView);
-                                webViews.Insert(hWebView, NULL);
+                                webViews.erase(webViews.begin() + hWebView);
+                                webViews.insert(webViews.begin() + hWebView, nullptr);
                             }
 
                             EnterCriticalSection(&cs);
-                            for(UINT i = 1; i < pendingEvents.Num(); i++) {
+                            for(UINT i = 1; i < pendingEvents.size(); i++) {
                                 // remove all events belonging to this web view
                                 // this would include only Update, Shutdown and Create View requests
-                                Browser::Event *pendingEvent = pendingEvents.GetElement(i);
+                                Browser::Event *pendingEvent = pendingEvents[i];
                                 if (pendingEvent->source == browserEvent->source) {
-                                    pendingEvents.Remove(i);
+                                    pendingEvents.erase(pendingEvents.begin() + i);
                                     pendingEvent->Cancelled();
                                     delete pendingEvent;
                                     i--;
@@ -270,10 +270,10 @@ protected:
 
                 case Browser::CLEANUP:
                     {
-                        while(webViews.Num()) {
+                        while(webViews.size()) {
                             // by the time we get here,  everything should already be shut down
-                            WebView *webView = webViews.GetElement(0);
-                            webViews.Remove(0);
+                            WebView *webView = webViews[0];
+                            webViews.erase(webViews.begin());
                             if (webView) {
                                 webView->LoadURL(WebURL(WSLit("about:blank")));
                                 // fixes a bug in awesomium where if you destroy it while a flash application
@@ -298,15 +298,12 @@ protected:
                 }
 
                 EnterCriticalSection(&cs);
-                pendingEvents.Remove(0);
+                pendingEvents.erase(pendingEvents.begin());
                 LeaveCriticalSection(&cs);
             }
 
         }
     }
-
-
-
 
 public:
     void Startup() 
@@ -327,7 +324,7 @@ public:
     void AddEvent(Browser::Event *browserEvent)
     {
         EnterCriticalSection(&cs);
-        pendingEvents.Add(browserEvent);
+        pendingEvents.push_back(browserEvent);
         LeaveCriticalSection(&cs);
         SetEvent(updateEvent);
     }
@@ -352,7 +349,7 @@ public:
         return webCore;
     }
 
-    List<JavascriptExtensionFactory *> &GetJavascriptExtensionFactories()
+    std::vector<JavascriptExtensionFactory *> &GetJavascriptExtensionFactories()
     {
         return javascriptExtensionFactories;
     }

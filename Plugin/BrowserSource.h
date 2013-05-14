@@ -6,6 +6,7 @@
 #include "OBSApi.h"
 
 #include "Awesomium\JSObject.h"
+#include <vector>
 
 namespace Awesomium {
 	class WebCore;
@@ -40,8 +41,9 @@ private:
     
     BrowserSourceListener *browserSourceListener;
 
-    List<JavascriptExtension *> javascriptExtensions;
-    List<DataSourceWithMimeType *> dataSources;
+    std::vector<JavascriptExtension *> javascriptExtensions;
+    std::vector<DataSourceWithMimeType *> dataSources;
+        
 	BrowserSourceConfig *config;
 
 

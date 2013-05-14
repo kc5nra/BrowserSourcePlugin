@@ -24,7 +24,7 @@ using namespace Awesomium;
 
 class BrowserSource::BrowserSourceListener : public WebViewListener::Load, public JSMethodHandler
 {
-    friend class SceneItem;
+
 public:
     BrowserSourceListener(BrowserSource *browserSource) 
     {
@@ -50,9 +50,9 @@ public: //WebViewListener::Load
         const Awesomium::WebString& methodName,	
         const Awesomium::JSArray& args)
     {
-        List<JavascriptExtension *> &javascriptExtensions = browserSource->javascriptExtensions;
+        auto &javascriptExtensions = browserSource->javascriptExtensions;
 
-        for(UINT i = 0; i < javascriptExtensions.Num(); i++) {
+        for(UINT i = 0; i < javascriptExtensions.size(); i++) {
             if (javascriptExtensions[i]->Handles(NO_RETURN_ARGUMENT, remoteObjectId, methodName)) {
                 javascriptExtensions[i]->Handle(methodName, args);
                 return;
@@ -67,9 +67,9 @@ public: //WebViewListener::Load
         const Awesomium::WebString& methodName, 
         const Awesomium::JSArray& args)
     {
-        List<JavascriptExtension *> &javascriptExtensions = browserSource->javascriptExtensions;
+        auto &javascriptExtensions = browserSource->javascriptExtensions;
 
-        for(UINT i = 0; i < javascriptExtensions.Num(); i++) {
+        for(UINT i = 0; i < javascriptExtensions.size(); i++) {
             if (javascriptExtensions[i]->Handles(RETURN_ARGUMENT, remoteObjectId, methodName)) {
                 return javascriptExtensions[i]->Handle(methodName, args);
             }
@@ -81,9 +81,9 @@ public: //WebViewListener::Load
     {
 
         if (!browserSource->hasRegisteredJavascriptExtensions) {
-            List<JavascriptExtension *> &javascriptExtensions = browserSource->javascriptExtensions;
+            auto &javascriptExtensions = browserSource->javascriptExtensions;
 
-            for (UINT i = 0; i < javascriptExtensions.Num(); i++) {
+            for (UINT i = 0; i < javascriptExtensions.size(); i++) {
                 javascriptExtensions[i]->Register(caller);
             }
             browserSource->hasRegisteredJavascriptExtensions = true;
@@ -96,7 +96,7 @@ public: //WebViewListener::Load
 
 BrowserSource::BrowserSource(XElement *data)
 {
-    Log(TEXT("Using Browser Source"));
+	Log(TEXT("Using Browser Source"));
 
     hWebView = -2;
     hasRegisteredJavascriptExtensions = false;
@@ -121,15 +121,15 @@ BrowserSource::~BrowserSource()
     texture = NULL;
 
     delete config;
-    for (UINT i = 0; i < dataSources.Num(); i++) {
+    for (UINT i = 0; i < dataSources.size(); i++) {
         delete dataSources[i];
     }
-    dataSources.Clear();
+    dataSources.clear();
     
-    for (UINT i = 0; i < javascriptExtensions.Num(); i++) {
+    for (UINT i = 0; i < javascriptExtensions.size(); i++) {
         delete javascriptExtensions[i];
     }
-    javascriptExtensions.Clear();
+    javascriptExtensions.clear();
     
     DeleteCriticalSection(&textureLock);
 
@@ -161,15 +161,15 @@ WebView *BrowserSource::CreateWebViewCallback(WebCore *webCore, const int hWebVi
     WebSession *webSession;
     webSession = webCore->CreateWebSession(WSLit("plugins\\BrowserSourcePlugin\\cache"), webPreferences);
   
-    for (UINT i = 0; i < dataSources.Num(); i++) {
+    for (UINT i = 0; i < dataSources.size(); i++) {
         delete dataSources[i];
     }
-    dataSources.Clear();
+    dataSources.clear();
 
-    dataSources.Add(new BrowserDataSource(config->isWrappingAsset, config->assetWrapTemplate, config->width, config->height));
-    dataSources.Add(new BlankDataSource(config->isWrappingAsset, config->assetWrapTemplate, config->width, config->height));
+    dataSources.push_back(new BrowserDataSource(config->isWrappingAsset, config->assetWrapTemplate, config->width, config->height));
+    dataSources.push_back(new BlankDataSource(config->isWrappingAsset, config->assetWrapTemplate, config->width, config->height));
 
-    for(UINT i = 0; i < dataSources.Num(); i++) {
+    for(UINT i = 0; i < dataSources.size(); i++) {
         int mimeTypeCount = sizeof(mimeTypes) / sizeof(CTSTR);
         for(int j = 0; j < mimeTypeCount; j += 2) {
             dataSources[i]->AddMimeType(mimeTypes[j], mimeTypes[j+1]);
@@ -177,17 +177,17 @@ WebView *BrowserSource::CreateWebViewCallback(WebCore *webCore, const int hWebVi
         webSession->AddDataSource(dataSources[i]->GetHost(), dataSources[i]);
     }
 
-    for (UINT i = 0; i < javascriptExtensions.Num(); i++) {
+    for (UINT i = 0; i < javascriptExtensions.size(); i++) {
         delete javascriptExtensions[i];
     }
 
-    javascriptExtensions.Clear();
+    javascriptExtensions.clear();
     hasRegisteredJavascriptExtensions = false;
 
-    List<JavascriptExtensionFactory *> &javascriptExtensionFactories = browserManager->GetJavascriptExtensionFactories();
+    auto &javascriptExtensionFactories = browserManager->GetJavascriptExtensionFactories();
 
-    for(UINT i = 0; i < javascriptExtensionFactories.Num(); i++) {
-        javascriptExtensions.Add(javascriptExtensionFactories[i]->Create());
+    for(UINT i = 0; i < javascriptExtensionFactories.size(); i++) {
+        javascriptExtensions.push_back(javascriptExtensionFactories[i]->Create());
     }
 
     WebView *webView;
