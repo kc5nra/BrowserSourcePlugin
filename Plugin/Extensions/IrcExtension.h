@@ -6,7 +6,10 @@
 #include <string>
 #include <vector>
 
+extern "C" {
 #include "libircclient.h"
+}
+
 #include "..\JavascriptExtension.h"
 
 class IrcExtension :
@@ -16,7 +19,6 @@ class IrcExtension :
 private:
 	HANDLE hThread;
 	irc_session_t *session;
-	irc_callbacks_t callbacks;
 
 	std::string nickName;
 	std::string channelName;

@@ -9,6 +9,8 @@
 #include <Awesomium\STLHelpers.h>
 #include <Awesomium\WebStringArray.h>
 
+#include <set>
+
 using namespace Awesomium;
 
 enum JavascriptFunctionType {
@@ -22,8 +24,8 @@ protected:
     WebString globalObjectName;
     unsigned int remoteObjectId;
    
-    WebStringArray noReturnArgumentFunctions;
-    WebStringArray returnArgumentFunctions;
+    std::set<WebString> noReturnArgumentFunctions;
+    std::set<WebString> returnArgumentFunctions;
 
 public:
     JavascriptExtension(WebString &globalObjectName) 
@@ -42,14 +44,16 @@ public:
             JSObject object = value.ToObject();
             
             remoteObjectId = object.remote_id();
-
-            for(unsigned int i = 0; i < noReturnArgumentFunctions.size(); i++) {
-                object.SetCustomMethod(noReturnArgumentFunctions[i], false);
+            for(auto i = noReturnArgumentFunctions.begin(); i != noReturnArgumentFunctions.end(); i++) {
+            
             }
-            for(unsigned int i = 0; i < returnArgumentFunctions.size(); i++) {
-                object.SetCustomMethod(returnArgumentFunctions[i], true);
+            for(auto i = noReturnArgumentFunctions.begin(); i != noReturnArgumentFunctions.end(); i++) {
+                object.SetCustomMethod(*i, false);
             }
-
+            for(auto i = returnArgumentFunctions.begin(); i != returnArgumentFunctions.end(); i++) {
+                object.SetCustomMethod(*i, false);
+            }
+           
             return true;
         }
         return false;
@@ -57,7 +61,7 @@ public:
 
     virtual bool Handles(const enum JavascriptFunctionType functionType, const unsigned int remoteObjectId, const WebString &functionName) {
         if (this->remoteObjectId == remoteObjectId) {
-            WebStringArray *functionArray = NULL;
+            std::set<WebString> *functionArray = NULL;
             switch (functionType) {
                 case NO_RETURN_ARGUMENT:
                 {
@@ -73,7 +77,7 @@ public:
 
             if (functionArray) {
                 for(unsigned int i = 0; i < functionArray->size(); i++) {
-                    if (functionArray->At(i) == functionName) {
+                    if (functionArray->find(functionName) != functionArray->end()) {
                         return true;
                     }
                 }

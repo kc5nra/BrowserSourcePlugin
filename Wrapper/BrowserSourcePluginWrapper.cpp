@@ -15,9 +15,7 @@ static HMODULE hmodLibGLESv2;
 static HMODULE hmodIcudt;
 static HMODULE hmodAwesomium;
 static HMODULE hmodZlib;
-static HMODULE hmodRiched32;
 static HMODULE hmodSciLexer;
-static HMODULE hmodIrc;
 
 static LOADPLUGIN_PROC InternalLoadPlugin = 0;
 static UNLOADPLUGIN_PROC InternalUnloadPlugin = 0;
@@ -89,11 +87,8 @@ BOOL CALLBACK DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 			hmodZlib		= LoadLibrary(L".\\plugins\\BrowserSourcePlugin\\lib\\zlib1.dll");
 
 			// Settings GUI reqs	
-			hmodRiched32	= LoadLibrary(L"Riched32.dll");
 			hmodSciLexer	= LoadLibrary(L".\\plugins\\BrowserSourcePlugin\\lib\\SciLexer.dll");
 			
-            hmodIrc         = LoadLibrary(L".\\plugins\\BrowserSourcePlugin\\lib\\libircclient.dll");
-
 			// main plugin dll
 			hmodBspPlugin	= LoadLibrary(L".\\plugins\\BrowserSourcePlugin\\BrowserSourcePlugin.dll");
 
@@ -110,9 +105,7 @@ BOOL CALLBACK DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 		case DLL_PROCESS_DETACH:
 
 			if (hmodBspPlugin) FreeLibrary(hmodBspPlugin);
-            if (hmodIrc) FreeLibrary(hmodIrc);
 			if (hmodSciLexer) FreeLibrary(hmodSciLexer);
-			if (hmodRiched32) FreeLibrary(hmodRiched32);
 			if (hmodZlib) FreeLibrary(hmodZlib);
 			if (hmodAwesomium) FreeLibrary(hmodAwesomium);
 			if (hmodIcudt) FreeLibrary(hmodIcudt);

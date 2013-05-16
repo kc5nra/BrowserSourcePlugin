@@ -14,7 +14,7 @@ KeyboardExtension::KeyboardExtension(const KeyboardManager *keyboardManager)
     : JavascriptExtension(WSLit("OBSKeyboardExtension"))
 {
     this->keyboardManager = keyboardManager;
-    returnArgumentFunctions.Push(WSLit("getKeyEvents"));
+    returnArgumentFunctions.insert(WSLit("getKeyEvents"));
 
     InitializeCriticalSection(&keyEventLock);
 }

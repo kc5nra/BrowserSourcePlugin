@@ -25,6 +25,9 @@
     <ClCompile Include="STLUtilities.cpp">
       <Filter>Utilities</Filter>
     </ClCompile>
+    <ClCompile Include="Extensions\Irc\libircclient.c">
+      <Filter>Extensions\Irc\Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BrowserManager.h">
@@ -69,6 +72,30 @@
     <ClInclude Include="STLUtilities.h">
       <Filter>Utilities</Filter>
     </ClInclude>
+    <ClInclude Include="Extensions\Irc\session.h">
+      <Filter>Extensions\Irc\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Extensions\Irc\dcc.h">
+      <Filter>Extensions\Irc\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Extensions\Irc\params.h">
+      <Filter>Extensions\Irc\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Extensions\Irc\include\libircclient.h">
+      <Filter>Extensions\Irc\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="Extensions\Irc\include\libirc_rfcnumeric.h">
+      <Filter>Extensions\Irc\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="Extensions\Irc\include\libirc_options.h">
+      <Filter>Extensions\Irc\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="Extensions\Irc\include\libirc_events.h">
+      <Filter>Extensions\Irc\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="Extensions\Irc\include\libirc_errors.h">
+      <Filter>Extensions\Irc\Include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Headers">
@@ -85,6 +112,18 @@
     </Filter>
     <Filter Include="Utilities">
       <UniqueIdentifier>{c219fcfc-1118-45c4-b8d4-9dcc229d9c8e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Extensions\Irc">
+      <UniqueIdentifier>{36c6c726-d98e-4003-a417-11965f201507}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Extensions\Irc\Headers">
+      <UniqueIdentifier>{e70963f7-a83c-4293-9b32-bbbdeedb0c7c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Extensions\Irc\Source">
+      <UniqueIdentifier>{85cc2d56-10a6-4f19-8960-b576d26bc091}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Extensions\Irc\Include">
+      <UniqueIdentifier>{1b99d8ad-0ab6-45e6-9c2a-1121d6067821}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

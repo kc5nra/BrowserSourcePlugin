@@ -190,9 +190,9 @@ WebView *BrowserSource::CreateWebViewCallback(WebCore *webCore, const int hWebVi
     hasRegisteredJavascriptExtensions = false;
 
     auto &javascriptExtensionFactories = browserManager->GetJavascriptExtensionFactories();
-
-    for(UINT i = 0; i < javascriptExtensionFactories.size(); i++) {
-        javascriptExtensions.push_back(javascriptExtensionFactories[i]->Create());
+    
+    for(auto i = javascriptExtensionFactories.begin(); i < javascriptExtensionFactories.end(); i++) {
+        javascriptExtensions.push_back((*i)->Create());
     }
 
     WebView *webView;

@@ -113,12 +113,14 @@ void event_channel(
 IrcExtension::IrcExtension()
 	: JavascriptExtension(WSLit("OBSIrcExtension"))
 {
-	noReturnArgumentFunctions.Push(WSLit("connect"));
-	noReturnArgumentFunctions.Push(WSLit("disconnect"));
-	returnArgumentFunctions.Push(WSLit("getMessages"));
-	returnArgumentFunctions.Push(WSLit("isConnected()"));
+	noReturnArgumentFunctions.insert(WSLit("connect"));
+	noReturnArgumentFunctions.insert(WSLit("disconnect"));
+	returnArgumentFunctions.insert(WSLit("getMessages"));
+	returnArgumentFunctions.insert(WSLit("isConnected()"));
 
-	memset(&callbacks, 0, sizeof(callbacks));
+    irc_callbacks_t callbacks = { 0 };
+	
+    //memset(&callbacks, 0, sizeof(callbacks));
 
 	callbacks.event_connect = event_connect;
 	callbacks.event_join = event_join;

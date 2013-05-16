@@ -13,6 +13,14 @@
   <ItemGroup>
     <ClInclude Include="Extensions\AudioPlayerExtension.h" />
     <ClInclude Include="Extensions\IrcExtension.h" />
+    <ClInclude Include="Extensions\Irc\dcc.h" />
+    <ClInclude Include="Extensions\Irc\include\libircclient.h" />
+    <ClInclude Include="Extensions\Irc\include\libirc_errors.h" />
+    <ClInclude Include="Extensions\Irc\include\libirc_events.h" />
+    <ClInclude Include="Extensions\Irc\include\libirc_options.h" />
+    <ClInclude Include="Extensions\Irc\include\libirc_rfcnumeric.h" />
+    <ClInclude Include="Extensions\Irc\params.h" />
+    <ClInclude Include="Extensions\Irc\session.h" />
     <ClInclude Include="Extensions\KeyboardExtension.h" />
     <ClInclude Include="Extensions\KeyboardManager.h" />
     <ClInclude Include="JavascriptExtension.h" />
@@ -31,6 +39,7 @@
     <ClCompile Include="BrowserSourcePlugin.cpp" />
     <ClCompile Include="Extensions\AudioPlayerExtension.cpp" />
     <ClCompile Include="Extensions\IrcExtension.cpp" />
+    <ClCompile Include="Extensions\Irc\libircclient.c" />
     <ClCompile Include="Extensions\KeyboardExtension.cpp" />
     <ClCompile Include="Extensions\KeyboardManager.cpp" />
     <ClCompile Include="STLUtilities.cpp" />
@@ -90,7 +99,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>$(ProjectDir)lib;$(SolutionDir)..\OBS\OBSApi;$(AWE_DIR)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_HAS_EXCEPTIONS=0;D_STATIC_CPPLIB;WIN32;$(BSP_VERSION);_DEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_HAS_EXCEPTIONS=0;D_STATIC_CPPLIB;WIN32;_WIN32;$(BSP_VERSION);_DEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -119,16 +128,18 @@
       <Optimization>Full</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <AdditionalIncludeDirectories>$(ProjectDir)lib;$(SolutionDir)..\OBS\OBSApi;$(AWE_DIR)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;$(BSP_VERSION);NDEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_HAS_EXCEPTIONS=0;D_STATIC_CPPLIB;WIN32;_WIN32;$(BSP_VERSION);NDEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PrecompiledHeader>
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ExceptionHandling>false</ExceptionHandling>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>libircclient.lib;Scintilla.lib;SciLexer.lib;zdll.lib;OBSApi.lib;awesomium.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ws2_32.lib;libircclient.lib;Scintilla.lib;SciLexer.lib;zdll.lib;OBSApi.lib;awesomium.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(ProjectDir)lib;$(SolutionDir)..\OBS\OBSApi\Release;%(AdditionalLibraryDirectories);$(AWE_DIR)build\lib</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(SolutionDir)..\OBS\rundir\pdb32\$(TargetName).pdb</ProgramDatabaseFile>
@@ -139,7 +150,7 @@
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <PostBuildEvent>
-      <Command>copy "$(OutDir)$(ProjectName).dll" "$(SolutionDir)..\OBS\rundir\plugins"</Command>
+      <Command>copy "$(OutDir)$(ProjectName).dll" "$(SolutionDir)..\OBS\rundir\plugins\BrowserSourcePlugin"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
