@@ -166,8 +166,13 @@ WebView *BrowserSource::CreateWebViewCallback(WebCore *webCore, const int hWebVi
     }
     dataSources.clear();
 
-    dataSources.push_back(new BrowserDataSource(config->isWrappingAsset, config->assetWrapTemplate, config->width, config->height));
-    dataSources.push_back(new BlankDataSource(config->isWrappingAsset, config->assetWrapTemplate, config->width, config->height));
+    
+    char *utf8str = config->assetWrapTemplate.CreateUTF8String();
+    std::string assetWrapTemplate(utf8str);
+    Free(utf8str);
+
+    dataSources.push_back(new BrowserDataSource(config->isWrappingAsset, assetWrapTemplate, config->width, config->height));
+    dataSources.push_back(new BlankDataSource(config->isWrappingAsset, assetWrapTemplate, config->width, config->height));
 
     for(UINT i = 0; i < dataSources.size(); i++) {
         int mimeTypeCount = sizeof(mimeTypes) / sizeof(CTSTR);

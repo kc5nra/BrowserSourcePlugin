@@ -5,6 +5,7 @@
 
 #include "OBSApi.h"
 #include "windows.h"
+#include <set>
 
 namespace Keyboard
 {
@@ -35,7 +36,7 @@ public:
     static HHOOK hHook;
 
 private:
-    List<KeyboardListener *> listeners;
+	std::set<KeyboardListener *> listeners;
     CRITICAL_SECTION listenerLock;
 
 public:
@@ -60,23 +61,21 @@ public:
     void AddListener(KeyboardListener *listener)
     {
         EnterCriticalSection(&listenerLock);
-        if (!listeners.HasValue(listener)) {
-            listeners.Add(listener);
-        }
+        listeners.insert(listener);
         LeaveCriticalSection(&listenerLock);
     }
     void RemoveListener(KeyboardListener *listener)
     {
         EnterCriticalSection(&listenerLock);
-        listeners.RemoveItem(listener);
+        listeners.erase(listener);
         LeaveCriticalSection(&listenerLock);
     }
 
     void PushKeyEvent(Keyboard::Key key)
     {
         EnterCriticalSection(&listenerLock);
-        for(UINT i = 0; i < listeners.Num(); i++) {
-            listeners[i]->KeyboardEvent(key);
+		for(auto i = listeners.begin(); i != listeners.end(); i++) {
+            (*i)->KeyboardEvent(key);
         }
         LeaveCriticalSection(&listenerLock);
     }

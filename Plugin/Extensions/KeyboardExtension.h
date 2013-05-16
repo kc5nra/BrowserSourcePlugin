@@ -8,6 +8,7 @@
 
 #include "KeyboardManager.h"
 
+#include <vector>
 
 class KeyboardExtension :
     public JavascriptExtension, public KeyboardListener
@@ -18,7 +19,7 @@ public:
 
 private:
     const KeyboardManager *keyboardManager;
-    List<Keyboard::Key> keyEvents;
+    std::vector<Keyboard::Key> keyEvents;
     CRITICAL_SECTION keyEventLock;
 
 public:

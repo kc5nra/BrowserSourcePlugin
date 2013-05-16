@@ -23,6 +23,7 @@
     <ClInclude Include="Localization.h" />
     <ClInclude Include="MimeTypes.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="STLUtilities.h" />
     <ClInclude Include="SwfReader.h" />
   </ItemGroup>
   <ItemGroup>
@@ -32,6 +33,7 @@
     <ClCompile Include="Extensions\IrcExtension.cpp" />
     <ClCompile Include="Extensions\KeyboardExtension.cpp" />
     <ClCompile Include="Extensions\KeyboardManager.cpp" />
+    <ClCompile Include="STLUtilities.cpp" />
     <ClCompile Include="SwfReader.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -88,7 +90,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>$(ProjectDir)lib;$(SolutionDir)..\OBS\OBSApi;$(AWE_DIR)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_HAS_EXCEPTIONS=0;D_STATIC_CPPLIB;INTERACTION_SUPPORT;WIN32;$(BSP_VERSION);_DEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_HAS_EXCEPTIONS=0;D_STATIC_CPPLIB;WIN32;$(BSP_VERSION);_DEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>

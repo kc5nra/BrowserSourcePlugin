@@ -35,14 +35,14 @@ KeyboardExtension::Handle(
 
         EnterCriticalSection(&keyEventLock);
         JSArray returnArgs;
-        while(keyEvents.Num())
+        while(keyEvents.size())
         {
             Keyboard::Key &key = keyEvents[0];
             JSArray args;
             args.Push(JSValue(key.type));
             args.Push(JSValue((int)key.vkCode));
             returnArgs.Push(args);
-            keyEvents.Remove(0);
+			keyEvents.erase(keyEvents.begin());
         }
 
         LeaveCriticalSection(&keyEventLock);
@@ -56,6 +56,6 @@ void
 KeyboardExtension::KeyboardEvent(Keyboard::Key &key)
 {
     EnterCriticalSection(&keyEventLock);
-    keyEvents.Add(key);
+    keyEvents.push_back(key);
     LeaveCriticalSection(&keyEventLock);
 }

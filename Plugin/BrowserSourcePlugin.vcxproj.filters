@@ -22,6 +22,9 @@
     <ClCompile Include="Extensions\IrcExtension.cpp">
       <Filter>Extensions</Filter>
     </ClCompile>
+    <ClCompile Include="STLUtilities.cpp">
+      <Filter>Utilities</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BrowserManager.h">
@@ -62,6 +65,9 @@
     </ClInclude>
     <ClInclude Include="Extensions\IrcExtension.h">
       <Filter>Extensions</Filter>
+    </ClInclude>
+    <ClInclude Include="STLUtilities.h">
+      <Filter>Utilities</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

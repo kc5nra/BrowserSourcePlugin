@@ -3,45 +3,37 @@
 */
 #pragma once
 
-#include "OBSApi.h"
 #include <Awesomium\WebString.h>
 #include <Awesomium\DataSource.h>
 #include <Awesomium\WebString.h>
 #include <Awesomium\STLHelpers.h>
 
+#include "STLUtilities.h"
+
+#include <cctype>
+#include <algorithm>
+#include <fstream>
+#include <sstream>
+#include <string>
+#include <map>
+
 using namespace Awesomium;
 
-struct MimeType 
-{
-    MimeType(const String &mimeType, const String &fileType) 
-    {
-        this->fileType = fileType;
-        this->mimeType = mimeType;
-    }
-
-    String mimeType;
-    String fileType;
-
-};
 
 class DataSourceWithMimeType : public DataSource 
 {
 
 public:
-    virtual ~DataSourceWithMimeType() 
-    {
-        for(UINT i = 0; i < mimeTypes.Num(); i++) {
-            delete mimeTypes[i];
-        }
-    }
+    virtual ~DataSourceWithMimeType() {};
 
 protected:
-    List<MimeType *> mimeTypes;
+    std::map<std::string, std::string> mimeTypes;
 
 public:
-    void AddMimeType(const String &mimeType, const String &fileType) 
+    void AddMimeType(const std::string &mimeType, const std::string &fileType) 
     {
-        mimeTypes.Add(new MimeType(mimeType, fileType));
+        // keyed by file extension
+        mimeTypes[fileType] = mimeType;
     }
 
     virtual WebString GetHost() = 0;
@@ -54,12 +46,12 @@ class BlankDataSource : public DataSourceWithMimeType
 
 private:
     bool isWrappingAsset;
-    String assetWrapTemplate;
+    std::string assetWrapTemplate;
     int width;
     int height;
 
 public:
-    BlankDataSource(bool isWrappingAsset, const String &assetWrapTemplate, int width, int height) 
+    BlankDataSource(bool isWrappingAsset, const std::string &assetWrapTemplate, int width, int height) 
     { 
         this->isWrappingAsset = isWrappingAsset;
         this->assetWrapTemplate = assetWrapTemplate;
@@ -76,21 +68,49 @@ public:
 
         String mimeType = TEXT("text/html");
 
-        WebString wsMimeType = WebString((wchar16 *)mimeType.Array());
+        if (isWrappingAsset) {
+            isWrappingAsset = false;
 
-        isWrappingAsset = false;
+		    BSP::ReplaceStringInPlace(assetWrapTemplate, "$(WIDTH)", BSP::IntegerToString(width));
+		    BSP::ReplaceStringInPlace(assetWrapTemplate, "$(HEIGHT)", BSP::IntegerToString(height));
 
-        assetWrapTemplate.FindReplace(TEXT("$(WIDTH)"), IntString(width));
-        assetWrapTemplate.FindReplace(TEXT("$(HEIGHT)"), IntString(height));
+            SendResponse(request_id,
+			    assetWrapTemplate.length(),
+                (unsigned char *)assetWrapTemplate.c_str(),
+                WSLit("text/html"));
+        } else {
+            
+            std::string filePath = ToString(path);
+		    filePath = filePath.substr(0, filePath.find('?'));
 
-        LPSTR lpAssetWrapTemplate = assetWrapTemplate.CreateUTF8String();
-        SendResponse(request_id,
-            strlen(lpAssetWrapTemplate),
-            (unsigned char *)lpAssetWrapTemplate,
-            WSLit("text/html"));
+		    std::ifstream ifs;
+		    ifs.open(filePath, std::ifstream::binary);
+		    std::vector<char> data;
+		    if (ifs.good()) {
+			    ifs.seekg(0, std::ifstream::end);
+			    size_t file_size_in_byte = (size_t)ifs.tellg();
+			    data.resize(file_size_in_byte);
+			    ifs.seekg(0, std::ifstream::beg);
+			    ifs.read(&data[0], file_size_in_byte);
+		    }
+		    ifs.close();
 
-        Free(lpAssetWrapTemplate);
+            std::string mimeType = "text/html";
 
+		    // chop off ext and lower case it
+            std::string fileExtension = filePath.substr(filePath.find_last_of(".") + 1);
+		    std::transform(fileExtension.begin(), fileExtension.end(), fileExtension.begin(), std::tolower);
+
+		    auto itor = mimeTypes.find(fileExtension);
+		    if (itor != mimeTypes.end()) {
+			    mimeType = itor->second;
+		    }
+
+            SendResponse(request_id,
+                data.size(),
+               (data.size()) ? (unsigned char *)&data[0] : NULL,
+                ToWebString(mimeType));
+        }
     }
 
 public: //DataSourceWithMimeType
@@ -106,12 +126,12 @@ class BrowserDataSource : public DataSourceWithMimeType
 
 private:
     bool isWrappingAsset;
-    String assetWrapTemplate;
+    std::string assetWrapTemplate;
     int width;
     int height;
 
 public:
-    BrowserDataSource(bool isWrappingAsset, const String &assetWrapTemplate, int width, int height) 
+    BrowserDataSource(bool isWrappingAsset, const std::string &assetWrapTemplate, int width, int height) 
     { 
         this->isWrappingAsset = isWrappingAsset;
         this->assetWrapTemplate = assetWrapTemplate;
@@ -122,54 +142,30 @@ public:
 public:
     virtual void OnRequest(int request_id, const WebString& path) 
     {
-        String pathString;
-        char buffer[1025];
-        path.ToUTF8(buffer, 1024);
-        String filePath(buffer);
-        filePath = filePath.GetToken(0, '?');
-        XFile file;
+        
+		std::string filePath = ToString(path);
+		filePath = filePath.substr(0, filePath.find('?'));
 
-        LPSTR lpFileDataUTF8 = 0;
-        DWORD dwFileSize = 0;
-        if(file.Open(filePath, XFILE_READ | XFILE_SHARED, XFILE_OPENEXISTING)) {
-            file.SetPos(0, XFILE_BEGIN);
-            dwFileSize = (DWORD)file.GetFileSize();
-            lpFileDataUTF8 = (LPSTR)Allocate(dwFileSize+1);
-            lpFileDataUTF8[dwFileSize] = 0;
-            file.Read(lpFileDataUTF8, dwFileSize);
-        } else {
-            Log(TEXT("BrowserDataSource::OnRequest: could not open specified file %s (invalid file name or access violation)"), filePath);
-        }
-
-        String mimeType = TEXT("text/html");
-
-        for(UINT i = 0; i < mimeTypes.Num(); i++) {
-            MimeType *m = mimeTypes.GetElement(i);
-            if (m->fileType.Length() > filePath.Length()) {
-                continue;
-            }
-            String extractedType = filePath.Right(m->fileType.Length());
-            if (extractedType.CompareI(m->fileType)) {
-                mimeType = m->mimeType;
-                break;
-            }
-        }
-
-        WebString wsMimeType = WebString((wchar16 *)mimeType.Array());
+		std::ifstream ifs;
+		ifs.open(filePath, std::ifstream::binary);
+		std::vector<char> data;
+		if (ifs.good()) {
+			ifs.seekg(0, std::ifstream::end);
+			size_t file_size_in_byte = (size_t)ifs.tellg();
+			data.resize(file_size_in_byte);
+			ifs.seekg(0, std::ifstream::beg);
+			ifs.read(&data[0], file_size_in_byte);
+		}
+		ifs.close();
 
         if (isWrappingAsset) {
             isWrappingAsset = false;
 
-            String fileName;
+            std::string fileName = filePath.substr(filePath.find_last_of("/") + 1);
 
-            for(UINT i = filePath.Length() - 1; i >= 0; i--) {
-                if (filePath[i] == '/') {
-                    fileName = filePath.Right(filePath.Length() - i - 1);
-                    break;
-                }
-            }
-
-            assetWrapTemplate.FindReplace(TEXT("$(FILE)"), fileName);
+			BSP::ReplaceStringInPlace(assetWrapTemplate, "$(FILE)", fileName);
+			BSP::ReplaceStringInPlace(assetWrapTemplate, "$(WIDTH)", BSP::IntegerToString(width));
+            BSP::ReplaceStringInPlace(assetWrapTemplate, "$(HEIGHT)", BSP::IntegerToString(height));
 
             //TODO: Figure out what to do with this information
             // Since a lot of flash is vector art, it ends up 
@@ -182,30 +178,29 @@ public:
             //	swfHeight = swfReader.GetHeight();
             //}
 
-            assetWrapTemplate.FindReplace(TEXT("$(WIDTH)"), IntString(width));
-            assetWrapTemplate.FindReplace(TEXT("$(HEIGHT)"), IntString(height));
-
-            LPSTR lpAssetWrapTemplate = assetWrapTemplate.CreateUTF8String();
             SendResponse(request_id,
-                strlen(lpAssetWrapTemplate),
-                (unsigned char *)lpAssetWrapTemplate,
+                strlen(assetWrapTemplate.c_str()),
+                (unsigned char *)assetWrapTemplate.c_str(),
                 WSLit("text/html"));
 
-            Free(lpAssetWrapTemplate);
-
-
         } else {
+
+            std::string mimeType = "text/html";
+
+		    // chop off ext and lower case it
+            std::string fileExtension = filePath.substr(filePath.find_last_of(".") + 1);
+		    std::transform(fileExtension.begin(), fileExtension.end(), fileExtension.begin(), std::tolower);
+
+		    auto itor = mimeTypes.find(fileExtension);
+		    if (itor != mimeTypes.end()) {
+			    mimeType = itor->second;
+		    }
+
             SendResponse(request_id,
-                dwFileSize,
-                (unsigned char *)lpFileDataUTF8,
-                wsMimeType);
+                data.size(),
+               (data.size()) ? (unsigned char *)&data[0] : NULL,
+                ToWebString(mimeType));
         }
-
-
-
-        Free(lpFileDataUTF8);
-
-        file.Close();
     }
 
 
