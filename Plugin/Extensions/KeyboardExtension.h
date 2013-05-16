@@ -27,7 +27,7 @@ public:
     ~KeyboardExtension();
 
 public:
-    JSValue Handle(const Awesomium::WebString &functionName, const Awesomium::JSArray &args);
+    JSValue Handle(const std::string &functionName, const Awesomium::JSArray &args);
     void KeyboardEvent(Keyboard::Key &key);
 };
 

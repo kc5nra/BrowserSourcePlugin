@@ -15,14 +15,13 @@ enum AudioPlayerType {
 };
 
 AudioPlayerExtension::AudioPlayerExtension()
-    : JavascriptExtension(WSLit("OBSAudioPlayerExtension"))
+    : JavascriptExtension("OBSAudioPlayerExtension")
 {
 }
 
     
-JSValue 
-AudioPlayerExtension::Handle(
-    const WebString &functionName,
+JSValue AudioPlayerExtension::Handle(
+    const std::string &functionName,
     const JSArray &args)
 {
     return JSValue::Undefined();

@@ -51,10 +51,11 @@ public: //WebViewListener::Load
         const Awesomium::JSArray& args)
     {
         auto &javascriptExtensions = browserSource->javascriptExtensions;
+        auto functionName = ToString(methodName);
 
         for(UINT i = 0; i < javascriptExtensions.size(); i++) {
-            if (javascriptExtensions[i]->Handles(NO_RETURN_ARGUMENT, remoteObjectId, methodName)) {
-                javascriptExtensions[i]->Handle(methodName, args);
+            if (javascriptExtensions[i]->Handles(NO_RETURN_ARGUMENT, remoteObjectId, functionName)) {
+                javascriptExtensions[i]->Handle(functionName, args);
                 return;
             }
         }
@@ -68,10 +69,11 @@ public: //WebViewListener::Load
         const Awesomium::JSArray& args)
     {
         auto &javascriptExtensions = browserSource->javascriptExtensions;
+        auto functionName = ToString(methodName);
 
         for(UINT i = 0; i < javascriptExtensions.size(); i++) {
-            if (javascriptExtensions[i]->Handles(RETURN_ARGUMENT, remoteObjectId, methodName)) {
-                return javascriptExtensions[i]->Handle(methodName, args);
+            if (javascriptExtensions[i]->Handles(RETURN_ARGUMENT, remoteObjectId, functionName)) {
+                return javascriptExtensions[i]->Handle(functionName, args);
             }
         }
         return JSValue::Undefined();

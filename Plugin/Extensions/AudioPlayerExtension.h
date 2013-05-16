@@ -5,13 +5,15 @@
 
 #include "..\JavascriptExtension.h"
 
+#include <string>
+
 class AudioPlayerExtension : public JavascriptExtension
 {
 
 public:
     AudioPlayerExtension();
 public:
-    JSValue Handle(const Awesomium::WebString &functionName, const Awesomium::JSArray &args);
+    JSValue Handle(const std::string &functionName, const Awesomium::JSArray &args);
 };
 
 class AudioPlayerExtensionFactory : public JavascriptExtensionFactory

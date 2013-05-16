@@ -111,7 +111,7 @@
       <ExceptionHandling>false</ExceptionHandling>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>libircclient.lib;Scintilla.lib;SciLexer.lib;zdll.lib;OBSApi.lib;awesomium.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ws2_32.lib;libircclient.lib;Scintilla.lib;SciLexer.lib;zdll.lib;OBSApi.lib;awesomium.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(ProjectDir)lib;$(SolutionDir)..\OBS\OBSApi\Debug;%(AdditionalLibraryDirectories);$(AWE_DIR)build\lib</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(SolutionDir)..\OBS\rundir\pdb32\$(TargetName).pdb</ProgramDatabaseFile>

@@ -51,7 +51,7 @@ public:
 	void SetJoinedChannel(bool isJoinedChannel) { this->isJoinedChannel = isJoinedChannel; }
 
 public:
-	JSValue Handle(const Awesomium::WebString &functionName, const Awesomium::JSArray &args);
+	JSValue Handle(const std::string &functionName, const Awesomium::JSArray &args);
 };
 
 class IrcExtensionFactory : public JavascriptExtensionFactory

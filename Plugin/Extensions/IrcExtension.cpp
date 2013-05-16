@@ -111,12 +111,12 @@ void event_channel(
 }
 
 IrcExtension::IrcExtension()
-	: JavascriptExtension(WSLit("OBSIrcExtension"))
+	: JavascriptExtension("OBSIrcExtension")
 {
-	noReturnArgumentFunctions.insert(WSLit("connect"));
-	noReturnArgumentFunctions.insert(WSLit("disconnect"));
-	returnArgumentFunctions.insert(WSLit("getMessages"));
-	returnArgumentFunctions.insert(WSLit("isConnected()"));
+	noReturnArgumentFunctions.insert("connect");
+	noReturnArgumentFunctions.insert("disconnect");
+	returnArgumentFunctions.insert("getMessages");
+	returnArgumentFunctions.insert("isConnected()");
 
     irc_callbacks_t callbacks = { 0 };
 	
@@ -147,11 +147,11 @@ IrcExtension::~IrcExtension()
 	irc_destroy_session(session);
 }
 JSValue IrcExtension::Handle(
-	const WebString &functionName,
+	const std::string &functionName,
 	const JSArray &args)
 {
 	// connect(channelName)
-	if (functionName == WSLit("connect")) {
+	if (functionName == "connect") {
 		// were in the middle of something
 		if (irc_is_connected(session)) {
 			return JSValue::Undefined();
@@ -183,7 +183,7 @@ JSValue IrcExtension::Handle(
 		return JSValue::Undefined();    
 
 
-	} else if (functionName == WSLit("disconnect")) { // disconnect()
+	} else if (functionName == "disconnect") { // disconnect()
 
 		if (args.size() != 0) {
 			// TODO: log invalid method call
@@ -202,7 +202,7 @@ JSValue IrcExtension::Handle(
 
 		return JSValue::Undefined();
 
-	} else if (functionName == WSLit("getMessages")) {  // [message, message, ..] getMessages()
+	} else if (functionName == "getMessages") {  // [message, message, ..] getMessages()
 		EnterCriticalSection(&messageLock);
 
 		if (args.size() != 0) {
@@ -221,7 +221,7 @@ JSValue IrcExtension::Handle(
 
 		return returnArgs;
 
-	} else if (functionName == WSLit("isReady")) {
+	} else if (functionName == "isReady") {
 		return JSValue(irc_is_connected(session) && isJoinedChannel);
 	}
 

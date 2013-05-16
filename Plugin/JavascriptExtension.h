@@ -21,14 +21,14 @@ enum JavascriptFunctionType {
 class JavascriptExtension {
 
 protected:
-    WebString globalObjectName;
+    std::string globalObjectName;
     unsigned int remoteObjectId;
    
-    std::set<WebString> noReturnArgumentFunctions;
-    std::set<WebString> returnArgumentFunctions;
+    std::set<std::string> noReturnArgumentFunctions;
+    std::set<std::string> returnArgumentFunctions;
 
 public:
-    JavascriptExtension(WebString &globalObjectName) 
+    JavascriptExtension(std::string globalObjectName) 
     {
         this->globalObjectName = globalObjectName;
         remoteObjectId = 0;
@@ -39,19 +39,16 @@ public:
 public:
     virtual bool Register(WebView *webView) 
     {
-        JSValue &value = webView->CreateGlobalJavascriptObject(globalObjectName);
+        JSValue &value = webView->CreateGlobalJavascriptObject(ToWebString(globalObjectName));
         if (value.IsObject()) {
             JSObject object = value.ToObject();
             
             remoteObjectId = object.remote_id();
             for(auto i = noReturnArgumentFunctions.begin(); i != noReturnArgumentFunctions.end(); i++) {
-            
-            }
-            for(auto i = noReturnArgumentFunctions.begin(); i != noReturnArgumentFunctions.end(); i++) {
-                object.SetCustomMethod(*i, false);
+                object.SetCustomMethod(ToWebString(*i), false);
             }
             for(auto i = returnArgumentFunctions.begin(); i != returnArgumentFunctions.end(); i++) {
-                object.SetCustomMethod(*i, false);
+                object.SetCustomMethod(ToWebString(*i), true);
             }
            
             return true;
@@ -59,9 +56,9 @@ public:
         return false;
     }
 
-    virtual bool Handles(const enum JavascriptFunctionType functionType, const unsigned int remoteObjectId, const WebString &functionName) {
+    virtual bool Handles(const enum JavascriptFunctionType functionType, const unsigned int remoteObjectId, const std::string &functionName) {
         if (this->remoteObjectId == remoteObjectId) {
-            std::set<WebString> *functionArray = NULL;
+            std::set<std::string> *functionArray = NULL;
             switch (functionType) {
                 case NO_RETURN_ARGUMENT:
                 {
@@ -76,10 +73,8 @@ public:
             }
 
             if (functionArray) {
-                for(unsigned int i = 0; i < functionArray->size(); i++) {
-                    if (functionArray->find(functionName) != functionArray->end()) {
-                        return true;
-                    }
+                if (functionArray->find(functionName) != functionArray->end()) {
+                    return true;
                 }
             }
         }
@@ -87,7 +82,7 @@ public:
         return false;
     }
 
-    virtual JSValue Handle(const WebString &functionName, const JSArray &args)=0;
+    virtual JSValue Handle(const std::string &functionName, const JSArray &args)=0;
 };
 
 class JavascriptExtensionFactory {

@@ -11,10 +11,10 @@ KeyboardExtensionFactory::GetKeyboardManager()
 KeyboardManager *KeyboardExtensionFactory::keyboardManager = NULL;
 
 KeyboardExtension::KeyboardExtension(const KeyboardManager *keyboardManager)
-    : JavascriptExtension(WSLit("OBSKeyboardExtension"))
+    : JavascriptExtension("OBSKeyboardExtension")
 {
     this->keyboardManager = keyboardManager;
-    returnArgumentFunctions.insert(WSLit("getKeyEvents"));
+    returnArgumentFunctions.insert("getKeyEvents");
 
     InitializeCriticalSection(&keyEventLock);
 }
@@ -26,11 +26,11 @@ KeyboardExtension::~KeyboardExtension()
 
 JSValue 
 KeyboardExtension::Handle(
-    const WebString &functionName,
+    const std::string &functionName,
     const JSArray &args)
 {
     // {events: [[type, vkCode]..] getKeyEvents()
-    if (functionName == WSLit("getKeyEvents")) {
+    if (functionName == "getKeyEvents") {
         assert(args.size() == 0);
 
         EnterCriticalSection(&keyEventLock);
