@@ -9,8 +9,7 @@
 // global
 HHOOK KeyboardManager::hHook;
 
-LRESULT CALLBACK 
-KeyboardManager::LowLevelKeyboardProc(
+LRESULT CALLBACK KeyboardManager::LowLevelKeyboardProc(
     int nCode, 
     WPARAM wParam, 
     LPARAM lParam)

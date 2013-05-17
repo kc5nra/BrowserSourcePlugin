@@ -1,6 +1,6 @@
 /**
- * John Bradley (jrb@turrettech.com)
- */
+* John Bradley (jrb@turrettech.com)
+*/
 #pragma once
 
 #include "OBSApi.h"
@@ -9,9 +9,9 @@
 #include <vector>
 
 namespace Awesomium {
-	class WebCore;
-	class WebSession;
-	class WebView;
+    class WebCore;
+    class WebSession;
+    class WebView;
     class JSArray;
     class JSValue;
     class JSMethodHandler;
@@ -31,31 +31,31 @@ public:
     ~BrowserSource();
 
 private:
-	Vect2 browserSize;
-	Texture *texture;
-	int id;
-	int hWebView;
+    Vect2 browserSize;
+    Texture *texture;
+    int id;
+    int hWebView;
     bool hasRegisteredJavascriptExtensions;
 
-	unsigned int hJSGlobal;
-    
+    unsigned int hJSGlobal;
+
     BrowserSourceListener *browserSourceListener;
 
     std::vector<JavascriptExtension *> javascriptExtensions;
     std::vector<DataSourceWithMimeType *> dataSources;
-        
-	BrowserSourceConfig *config;
+
+    BrowserSourceConfig *config;
 
 
-	CRITICAL_SECTION textureLock;
+    CRITICAL_SECTION textureLock;
 protected:
     CRITICAL_SECTION jsGlobalLock;
 
 public:
     // ImageSource
-	void Tick(float fSeconds);
+    void Tick(float fSeconds);
     void Render(const Vect2 &pos, const Vect2 &size);
-    
+
 #ifdef INTERACTION_SUPPORT // remove when implemented
     void ProcessInteraction(Interaction &interaction);
 #endif INTERACTION_SUPPORT // remove when implemented
@@ -65,11 +65,12 @@ public:
     Vect2 GetSize() const;
     int GetWebView() { return hWebView; }
 
-// callbacks
+
 public:
-	Awesomium::WebView *CreateWebViewCallback(Awesomium::WebCore *webCore, const int hWebView);
-	void UpdateCallback(Awesomium::WebView *webView);
-	void SceneChangeCallback(Awesomium::WebView *webView);
+    // callbacks
+    Awesomium::WebView *CreateWebViewCallback(Awesomium::WebCore *webCore, const int hWebView);
+    void UpdateCallback(Awesomium::WebView *webView);
+    void SceneChangeCallback(Awesomium::WebView *webView);
 
 #ifdef INTERACTION_SUPPORT // remove when implemented
     void BrowserSource::InteractionCallback(Awesomium::WebView *webView, Interaction &interaction);

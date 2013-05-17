@@ -36,7 +36,7 @@ public:
     static HHOOK hHook;
 
 private:
-	std::set<KeyboardListener *> listeners;
+    std::set<KeyboardListener *> listeners;
     CRITICAL_SECTION listenerLock;
 
 public:
@@ -74,50 +74,9 @@ public:
     void PushKeyEvent(Keyboard::Key key)
     {
         EnterCriticalSection(&listenerLock);
-		for(auto i = listeners.begin(); i != listeners.end(); i++) {
+        for(auto i = listeners.begin(); i != listeners.end(); i++) {
             (*i)->KeyboardEvent(key);
         }
         LeaveCriticalSection(&listenerLock);
     }
 };
-
-
-/*
-
-
-    void KeyboardEvent(Key::Key &key)
-    {
-        EnterCriticalSection(&keyLock);
-        keyboardEvents.Add(key);
-        LeaveCriticalSection(&keyLock);
-    }
-
-    JSArray GetKeyEvents() 
-    {
-        EnterCriticalSection(&keyLock);
-        JSArray jsArray;
-        while(keyboardEvents.Num())
-        {
-            Key::Key &key = keyboardEvents[0];
-            JSArray args;
-            args.Push(JSValue(key.alt));
-            args.Push(JSValue(key.shift));
-            args.Push(JSValue(key.control));
-            args.Push(JSValue(key.capslock));
-            args.Push(JSValue(key.type));
-            args.Push(JSValue((int)key.vkCode));
-            jsArray.Push(args);
-            keyboardEvents.Remove(0);
-        }
-        LeaveCriticalSection(&keyLock);
-        return jsArray;
-    }
-
-    void ClearKeyEvents()
-    {
-        EnterCriticalSection(&keyLock);
-        keyboardEvents.Clear();
-        LeaveCriticalSection(&keyLock);
-    }
-
-    */

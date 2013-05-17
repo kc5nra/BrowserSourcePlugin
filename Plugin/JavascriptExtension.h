@@ -23,7 +23,7 @@ class JavascriptExtension {
 protected:
     std::string globalObjectName;
     unsigned int remoteObjectId;
-   
+
     std::set<std::string> noReturnArgumentFunctions;
     std::set<std::string> returnArgumentFunctions;
 
@@ -42,7 +42,7 @@ public:
         JSValue &value = webView->CreateGlobalJavascriptObject(ToWebString(globalObjectName));
         if (value.IsObject()) {
             JSObject object = value.ToObject();
-            
+
             remoteObjectId = object.remote_id();
             for(auto i = noReturnArgumentFunctions.begin(); i != noReturnArgumentFunctions.end(); i++) {
                 object.SetCustomMethod(ToWebString(*i), false);
@@ -50,7 +50,7 @@ public:
             for(auto i = returnArgumentFunctions.begin(); i != returnArgumentFunctions.end(); i++) {
                 object.SetCustomMethod(ToWebString(*i), true);
             }
-           
+
             return true;
         }
         return false;
@@ -59,13 +59,14 @@ public:
     virtual bool Handles(const enum JavascriptFunctionType functionType, const unsigned int remoteObjectId, const std::string &functionName) {
         if (this->remoteObjectId == remoteObjectId) {
             std::set<std::string> *functionArray = NULL;
-            switch (functionType) {
-                case NO_RETURN_ARGUMENT:
+            switch (functionType) 
+            {
+            case NO_RETURN_ARGUMENT:
                 {
                     functionArray = &noReturnArgumentFunctions;
                     break;
                 }
-                case RETURN_ARGUMENT:
+            case RETURN_ARGUMENT:
                 {
                     functionArray = &returnArgumentFunctions;
                     break;

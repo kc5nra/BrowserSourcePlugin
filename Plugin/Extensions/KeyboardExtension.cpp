@@ -4,7 +4,7 @@
 #include "KeyboardExtension.h"
 
 KeyboardManager *
-KeyboardExtensionFactory::GetKeyboardManager()
+    KeyboardExtensionFactory::GetKeyboardManager()
 {
     return keyboardManager;
 }
@@ -24,8 +24,7 @@ KeyboardExtension::~KeyboardExtension()
     DeleteCriticalSection(&keyEventLock);
 }
 
-JSValue 
-KeyboardExtension::Handle(
+JSValue KeyboardExtension::Handle(
     const std::string &functionName,
     const JSArray &args)
 {
@@ -42,7 +41,7 @@ KeyboardExtension::Handle(
             args.Push(JSValue(key.type));
             args.Push(JSValue((int)key.vkCode));
             returnArgs.Push(args);
-			keyEvents.erase(keyEvents.begin());
+            keyEvents.erase(keyEvents.begin());
         }
 
         LeaveCriticalSection(&keyEventLock);
@@ -52,8 +51,7 @@ KeyboardExtension::Handle(
     return JSValue::Undefined();
 }
 
-void 
-KeyboardExtension::KeyboardEvent(Keyboard::Key &key)
+void KeyboardExtension::KeyboardEvent(Keyboard::Key &key)
 {
     EnterCriticalSection(&keyEventLock);
     keyEvents.push_back(key);
