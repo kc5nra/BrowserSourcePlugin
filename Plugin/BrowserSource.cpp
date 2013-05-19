@@ -156,8 +156,17 @@ WebView *BrowserSource::CreateWebViewCallback(WebCore *webCore, const int hWebVi
 
     WebPreferences webPreferences;
     if (config->customCss.Length()) {
-        WebString webString = WebString(reinterpret_cast<wchar16 *>(config->customCss.Array()));
-        webPreferences.user_stylesheet = webString;
+
+        WebString customCss;
+        char *utf8str = config->customCss.CreateUTF8String();
+        int len = tstr_to_utf8_datalen(config->customCss);
+
+        if (utf8str) {
+            customCss = WebString::CreateFromUTF8(utf8str, len);
+            Free(utf8str);
+        }
+   
+        webPreferences.user_stylesheet = customCss;
     }
     webPreferences.enable_web_gl = true;
     WebSession *webSession;
@@ -168,10 +177,13 @@ WebView *BrowserSource::CreateWebViewCallback(WebCore *webCore, const int hWebVi
     }
     dataSources.clear();
 
+    std::string assetWrapTemplate;
     
     char *utf8str = config->assetWrapTemplate.CreateUTF8String();
-    std::string assetWrapTemplate(utf8str);
-    Free(utf8str);
+    if (utf8str) {
+        assetWrapTemplate = utf8str;
+        Free(utf8str);
+    }
 
     dataSources.push_back(new BrowserDataSource(config->isWrappingAsset, assetWrapTemplate, config->width, config->height));
     dataSources.push_back(new BlankDataSource(config->isWrappingAsset, assetWrapTemplate, config->width, config->height));
