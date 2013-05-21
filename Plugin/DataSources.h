@@ -61,12 +61,6 @@ public:
 
 public:
     virtual void OnRequest(int request_id, const WebString& path) {
-        String pathString;
-        char buffer[1025];
-        path.ToUTF8(buffer, 1024);
-        String filePath(buffer);
-
-        String mimeType = TEXT("text/html");
 
         if (isWrappingAsset) {
             isWrappingAsset = false;
