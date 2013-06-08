@@ -137,20 +137,8 @@ public:
     virtual void OnRequest(int request_id, const WebString& path) 
     {
         
-		std::string filePath = ToString(path);
+    	std::string filePath = ToString(path);
 		filePath = filePath.substr(0, filePath.find('?'));
-
-		std::ifstream ifs;
-		ifs.open(filePath, std::ifstream::binary);
-		std::vector<char> data;
-		if (ifs.good()) {
-			ifs.seekg(0, std::ifstream::end);
-			size_t file_size_in_byte = (size_t)ifs.tellg();
-			data.resize(file_size_in_byte);
-			ifs.seekg(0, std::ifstream::beg);
-			ifs.read(&data[0], file_size_in_byte);
-		}
-		ifs.close();
 
         if (isWrappingAsset) {
             isWrappingAsset = false;
@@ -178,6 +166,18 @@ public:
                 WSLit("text/html"));
 
         } else {
+
+            std::ifstream ifs;
+		    ifs.open(filePath, std::ifstream::binary);
+		    std::vector<char> data;
+		    if (ifs.good()) {
+			    ifs.seekg(0, std::ifstream::end);
+			    size_t file_size_in_byte = (size_t)ifs.tellg();
+			    data.resize(file_size_in_byte);
+			    ifs.seekg(0, std::ifstream::beg);
+			    ifs.read(&data[0], file_size_in_byte);
+		    }
+		    ifs.close();
 
             std::string mimeType = "text/html";
 

@@ -4,7 +4,6 @@
 
 #include "BrowserSource.h"
 #include "BrowserSourcePlugin.h"
-#include "SwfReader.h"
 #include "DataSources.h"
 #include "MimeTypes.h"
 
@@ -119,8 +118,10 @@ BrowserSource::~BrowserSource()
 
     delete browserSourceListener;
 
-    delete texture;
-    texture = NULL;
+    if (texture) {
+        delete texture;
+        texture = nullptr;
+    }
 
     delete config;
     for (UINT i = 0; i < dataSources.size(); i++) {
@@ -135,7 +136,7 @@ BrowserSource::~BrowserSource()
     
     DeleteCriticalSection(&textureLock);
 
-    config = NULL;
+    config = nullptr;
 }
 
 void BrowserSource::Tick(float fSeconds)
@@ -230,12 +231,14 @@ WebView *BrowserSource::CreateWebViewCallback(WebCore *webCore, const int hWebVi
     browserSize.y = float(config->height);
 
     EnterCriticalSection(&textureLock);
+    
     if (texture) {
         delete texture;
-        texture = 0;
+        texture = nullptr;
     }
 
-    texture = CreateTexture(config->width, config->height, GS_BGRA, NULL, FALSE, FALSE);
+    texture = CreateTexture(config->width, config->height, GS_BGRA, nullptr, FALSE, FALSE);
+    
     LeaveCriticalSection(&textureLock);
 
     return webView;

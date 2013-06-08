@@ -1,4 +1,4 @@
-/**
+ /**
 * John Bradley (jrb@turrettech.com)
 */
 
@@ -12,6 +12,8 @@
 
 #include <sstream>
 
+#include "..\STLUtilities.h"
+
 using namespace Awesomium;
 
 
@@ -22,14 +24,10 @@ unsigned __stdcall IrcThread(void* threadArgs)
         IrcExtension *context = (IrcExtension *)threadArgs;
 
         irc_session_t *session = context->GetSession();
-        std::string &channelName = context->GetChannelName();
-
+        std::string &serverName = context->GetServerName();
+        unsigned int port = context->GetPort();
+        
         irc_option_set(session, LIBIRC_OPTION_STRIPNICKS);
-
-
-        std::string serverName;
-        serverName += channelName;
-        serverName += ".jtvirc.com";
 
         srand((unsigned int)time(NULL));
 
@@ -40,7 +38,7 @@ unsigned __stdcall IrcThread(void* threadArgs)
 
         context->SetNickName(nickName);
 
-        if (irc_connect(session, serverName.c_str(), 6667, 0, nickName.c_str(), 0, 0))
+        if (irc_connect(session, serverName.c_str(), port, 0, nickName.c_str(), 0, 0))
         {
             //Log(TEXT("IrcThread() Could not connect: %s"), irc_strerror(irc_errno(session)));
             goto end_thread;
@@ -67,9 +65,16 @@ void event_connect(
     unsigned int count)
 {
     IrcExtension *context = (IrcExtension *)(irc_get_ctx(session));
+    
+    // enable special messages
+    irc_send_raw(session, "TWITCHCLIENT 2");
 
     std::string joinChannel = "#" + context->GetChannelName();
     irc_cmd_join(session, joinChannel.c_str(), NULL);
+
+    // ?? twitch sends it
+    std::string jtvChannelCommand = "JTVROOMS " + joinChannel;
+    irc_send_raw(session, jtvChannelCommand.c_str());
 }
 
 void event_join(
@@ -79,6 +84,7 @@ void event_join(
     const char **params, 
     unsigned int count)
 {
+
     if ( !origin || count != 1)
         return;
 
@@ -98,17 +104,89 @@ void event_channel(
     const char **params, 
     unsigned int count)
 {
+
     if ( !origin || count != 2 )
         return;
 
     IrcExtension *context = (IrcExtension *)(irc_get_ctx(session));
 
-    std::string message;;
-    message += origin;
-    message += ": ";
-    message += params[1];
+    IrcMessage &latestMessage = context->GetLatestMessage();
 
-    context->AddMessage(message);
+    latestMessage.Prepare(origin, params[1]);
+
+    auto &moderators = context->GetModerators();
+
+    if (moderators.find(origin) != moderators.end()) {
+        latestMessage.groups.insert("moderator");
+    }
+
+    context->AddMessage(latestMessage);
+}
+
+void event_privmsg(
+    irc_session_t *session, 
+    const char *eventType, 
+    const char *origin, 
+    const char **params, 
+    unsigned int count)
+{
+    if (!origin || count != 2 || strcmp("jtv", origin) != 0) {
+        return;
+    }
+
+    IrcExtension *context = (IrcExtension *)(irc_get_ctx(session));
+
+    std::string command(params[1]);
+
+    auto commandArgs = BSP::Split(params[1], ' ');
+    
+    IrcMessage &latestMessage = context->GetLatestMessage();
+    latestMessage.Prepare(commandArgs[1]);
+
+    if (commandArgs.size() > 1) {
+        if (commandArgs[0] == "USERCOLOR") {
+            latestMessage.color = commandArgs[2];
+        } else if (commandArgs[0] == "SPECIALUSER") {
+            latestMessage.groups.insert(commandArgs[2]);
+        } else if (commandArgs[0] == "EMOTESET") {
+            std::string emoticonString = commandArgs[2];
+            BSP::ReplaceStringInPlace(emoticonString, "[", "");
+            BSP::ReplaceStringInPlace(emoticonString, "]", "");
+            auto emoticons = BSP::Split(emoticonString, ',');
+            for(auto i = emoticons.begin(); i != emoticons.end(); i++) {
+                latestMessage.emoticons.insert(*i);
+            } 
+        }
+    }
+}
+
+void event_mode(
+    irc_session_t *session, 
+    const char *eventType, 
+    const char *origin, 
+    const char **params, 
+    unsigned int count)
+{
+    if (!origin || count != 3 || strcmp("jtv", origin) != 0) {
+        return;
+    }
+
+    IrcExtension *context = (IrcExtension *)(irc_get_ctx(session));
+    
+    
+    std::string joinChannel = "#" + context->GetChannelName();
+    std::string mode = params[1];
+    std::string nickName = params[2];
+
+    auto &moderators = context->GetModerators();
+
+    if (joinChannel ==  params[0]) {
+        if (mode == "+o") {
+            moderators.insert(nickName);
+        } else if (mode == "-o") {
+            moderators.erase(nickName);
+        }
+    }
 }
 
 IrcExtension::IrcExtension()
@@ -121,11 +199,11 @@ IrcExtension::IrcExtension()
 
     irc_callbacks_t callbacks = { 0 };
 
-    //memset(&callbacks, 0, sizeof(callbacks));
-
     callbacks.event_connect = event_connect;
     callbacks.event_join = event_join;
-    callbacks.event_channel = event_channel;
+    callbacks.event_channel = event_channel; 
+    callbacks.event_privmsg = event_privmsg;
+    callbacks.event_mode = event_mode;
 
     session = irc_create_session(&callbacks);
 
@@ -170,15 +248,33 @@ JSValue IrcExtension::Handle(
         }
 
 
-        if (args.size() != 1 || !args[0].IsString()) {
+        if (args.size() < 1 || !args[0].IsString()) {
             // TODO: log this and exit
             return JSValue::Undefined();
         }
 
-        isJoinedChannel = false;
-         
         channelName = ToString(args[0].ToString());
+        serverName = channelName + ".jtvirc.com";
+        port = 6667;
 
+        if (args.size() >= 2) {
+            if (!(args[1].IsString())) {
+                // log error
+                return JSValue::Undefined();
+            }
+            serverName = ToString(args[1].ToString());
+        }
+
+        if (args.size() == 3) {
+            if (!args[2].IsInteger()) {
+                // log error
+                return JSValue::Undefined();
+            }
+            port = (unsigned int)args[2].ToInteger();
+        }
+
+        isJoinedChannel = false;
+       
         hThread = (HANDLE)_beginthreadex(NULL, 0, &IrcThread, this, 0, NULL);
 
         return JSValue::Undefined();    
@@ -200,6 +296,12 @@ JSValue IrcExtension::Handle(
         }
 
         isJoinedChannel = false;
+        moderators.clear();
+        latestMessage.Clear();
+        
+        EnterCriticalSection(&messageLock);
+        messages.clear();
+        LeaveCriticalSection(&messageLock);
 
         return JSValue::Undefined();
 
@@ -214,7 +316,26 @@ JSValue IrcExtension::Handle(
         JSArray returnArgs;
 
         while(messages.size()) {
-            returnArgs.Push(ToWebString(messages[0]));
+            IrcMessage &message = messages[0];
+            JSObject newMessageObject;
+            
+            newMessageObject.SetProperty(WSLit("nickname"), ToWebString(message.username));
+            newMessageObject.SetProperty(WSLit("message"), ToWebString(message.message));
+            newMessageObject.SetProperty(WSLit("color"), ToWebString(message.color));
+            
+            JSArray groups;
+            for(auto i = message.groups.begin(); i != message.groups.end(); i++) {
+                groups.Push(ToWebString(*i));
+            }
+            newMessageObject.SetProperty(WSLit("groups"), groups);
+            
+            JSArray emoticons;
+            for(auto i = message.emoticons.begin(); i != message.emoticons.end(); i++) {
+                groups.Push(ToWebString(*i));
+            }
+            newMessageObject.SetProperty(WSLit("emoticons"), emoticons);
+
+            returnArgs.Push(newMessageObject);
             messages.erase(messages.begin());
         }
 

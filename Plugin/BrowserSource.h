@@ -46,7 +46,6 @@ private:
 
     BrowserSourceConfig *config;
 
-
     CRITICAL_SECTION textureLock;
 protected:
     CRITICAL_SECTION jsGlobalLock;
