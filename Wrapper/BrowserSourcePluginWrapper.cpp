@@ -7,13 +7,7 @@
 
 static HINSTANCE hinstDLL = 0;
 static HMODULE hmodBspPlugin;
-static HMODULE hmodAvCodec;
-static HMODULE hmodAvFormat;
-static HMODULE hmodAvUtil;
-static HMODULE hmodLibEGL;
-static HMODULE hmodLibGLESv2;
-static HMODULE hmodIcudt;
-static HMODULE hmodAwesomium;
+static HMODULE hmodCoherentUI;
 static HMODULE hmodZlib;
 static HMODULE hmodSciLexer;
 
@@ -69,19 +63,8 @@ BOOL CALLBACK DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 	switch (fdwReason) {
 		case DLL_PROCESS_ATTACH:
 			
-			// order is important!
-
-			// awesomium reqs
-			hmodAvUtil		= LoadLibrary(L".\\plugins\\BrowserSourcePlugin\\lib\\avutil-51.dll");
-			hmodAvCodec		= LoadLibrary(L".\\plugins\\BrowserSourcePlugin\\lib\\avcodec-53.dll");
-			hmodAvFormat	= LoadLibrary(L".\\plugins\\BrowserSourcePlugin\\lib\\avformat-53.dll");
-			
-			hmodLibGLESv2	= LoadLibrary(L".\\plugins\\BrowserSourcePlugin\\lib\\libGLESv2.dll");
-			hmodLibEGL		= LoadLibrary(L".\\plugins\\BrowserSourcePlugin\\lib\\libEGL.dll");
-			
-			hmodIcudt		= LoadLibrary(L".\\plugins\\BrowserSourcePlugin\\lib\\icudt.dll");
-			
-			hmodAwesomium	= LoadLibrary(L".\\plugins\\BrowserSourcePlugin\\lib\\awesomium.dll");
+			// order is important!			
+			hmodCoherentUI	= LoadLibrary(L".\\plugins\\BrowserSourcePlugin\\CoherentUI.dll");
 
 			// SwfReader reqs
 			hmodZlib		= LoadLibrary(L".\\plugins\\BrowserSourcePlugin\\lib\\zlib1.dll");
@@ -107,13 +90,7 @@ BOOL CALLBACK DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 			if (hmodBspPlugin) FreeLibrary(hmodBspPlugin);
 			if (hmodSciLexer) FreeLibrary(hmodSciLexer);
 			if (hmodZlib) FreeLibrary(hmodZlib);
-			if (hmodAwesomium) FreeLibrary(hmodAwesomium);
-			if (hmodIcudt) FreeLibrary(hmodIcudt);
-			if (hmodLibEGL) FreeLibrary(hmodLibEGL);
-			if (hmodLibGLESv2) FreeLibrary(hmodLibGLESv2);
-			if (hmodAvFormat) FreeLibrary(hmodAvFormat);
-			if (hmodAvCodec) FreeLibrary(hmodAvCodec);
-			if (hmodAvUtil) FreeLibrary(hmodAvUtil);
+			if (hmodCoherentUI) FreeLibrary(hmodCoherentUI);
 
 			break;
  

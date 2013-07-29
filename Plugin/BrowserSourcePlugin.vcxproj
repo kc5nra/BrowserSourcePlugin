@@ -11,39 +11,19 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Extensions\AudioPlayerExtension.h" />
-    <ClInclude Include="Extensions\IrcExtension.h" />
-    <ClInclude Include="Extensions\Irc\dcc.h" />
-    <ClInclude Include="Extensions\Irc\include\libircclient.h" />
-    <ClInclude Include="Extensions\Irc\include\libirc_errors.h" />
-    <ClInclude Include="Extensions\Irc\include\libirc_events.h" />
-    <ClInclude Include="Extensions\Irc\include\libirc_options.h" />
-    <ClInclude Include="Extensions\Irc\include\libirc_rfcnumeric.h" />
-    <ClInclude Include="Extensions\Irc\params.h" />
-    <ClInclude Include="Extensions\Irc\session.h" />
-    <ClInclude Include="Extensions\KeyboardExtension.h" />
-    <ClInclude Include="Extensions\KeyboardManager.h" />
-    <ClInclude Include="JavascriptExtension.h" />
     <ClInclude Include="BrowserManager.h" />
     <ClInclude Include="BrowserSource.h" />
     <ClInclude Include="BrowserSourcePlugin.h" />
-    <ClInclude Include="DataSources.h" />
+    <ClInclude Include="LocalFileHandler.h" />
     <ClInclude Include="Localization.h" />
     <ClInclude Include="MimeTypes.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="STLUtilities.h" />
-    <ClInclude Include="SwfReader.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BrowserSource.cpp" />
     <ClCompile Include="BrowserSourcePlugin.cpp" />
-    <ClCompile Include="Extensions\AudioPlayerExtension.cpp" />
-    <ClCompile Include="Extensions\IrcExtension.cpp" />
-    <ClCompile Include="Extensions\Irc\libircclient.c" />
-    <ClCompile Include="Extensions\KeyboardExtension.cpp" />
-    <ClCompile Include="Extensions\KeyboardManager.cpp" />
     <ClCompile Include="STLUtilities.cpp" />
-    <ClCompile Include="SwfReader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="BrowserSourcePlugin.rc" />
@@ -58,10 +38,12 @@
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <CharacterSet>Unicode</CharacterSet>
     <WholeProgramOptimization>true</WholeProgramOptimization>
+    <PlatformToolset>Windows7.1SDK</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>Windows7.1SDK</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -98,7 +80,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)lib;$(SolutionDir)..\OBS\OBSApi;$(AWE_DIR)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)lib;$(SolutionDir)..\OBS\OBSApi;$(CUI_DIR)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_HAS_EXCEPTIONS=0;D_STATIC_CPPLIB;WIN32;_WIN32;$(BSP_VERSION);_DEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -111,8 +93,8 @@
       <ExceptionHandling>false</ExceptionHandling>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>ws2_32.lib;libircclient.lib;Scintilla.lib;SciLexer.lib;zdll.lib;OBSApi.lib;awesomium.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ProjectDir)lib;$(SolutionDir)..\OBS\OBSApi\Debug;%(AdditionalLibraryDirectories);$(AWE_DIR)build\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>dxgi.lib;dxguid.lib;d3d10_1.lib;d3dx10.lib;ws2_32.lib;libircclient.lib;Scintilla.lib;SciLexer.lib;zdll.lib;OBSApi.lib;CoherentUI.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(CUI_DIR)lib\Win32;$(ProjectDir)lib;$(SolutionDir)..\OBS\OBSApi\Debug;%(AdditionalLibraryDirectories);</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(SolutionDir)..\OBS\rundir\pdb32\$(TargetName).pdb</ProgramDatabaseFile>
       <StripPrivateSymbols>$(SolutionDir)..\OBS\rundir\pdb32\stripped\$(TargetName).pdb</StripPrivateSymbols>
@@ -127,7 +109,7 @@
     <ClCompile>
       <Optimization>Full</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>$(ProjectDir)lib;$(SolutionDir)..\OBS\OBSApi;$(AWE_DIR)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)lib;$(SolutionDir)..\OBS\OBSApi;$(CUI_DIR)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_HAS_EXCEPTIONS=0;D_STATIC_CPPLIB;WIN32;_WIN32;$(BSP_VERSION);NDEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -139,8 +121,8 @@
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>ws2_32.lib;libircclient.lib;Scintilla.lib;SciLexer.lib;zdll.lib;OBSApi.lib;awesomium.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ProjectDir)lib;$(SolutionDir)..\OBS\OBSApi\Release;%(AdditionalLibraryDirectories);$(AWE_DIR)build\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>dxgi.lib;dxguid.lib;d3d10_1.lib;d3dx10.lib;ws2_32.lib;libircclient.lib;Scintilla.lib;SciLexer.lib;zdll.lib;OBSApi.lib;CoherentUI.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(CUI_DIR)lib\Win32;$(ProjectDir)lib;$(SolutionDir)..\OBS\OBSApi\Release;%(AdditionalLibraryDirectories);</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(SolutionDir)..\OBS\rundir\pdb32\$(TargetName).pdb</ProgramDatabaseFile>
       <StripPrivateSymbols>$(SolutionDir)..\OBS\rundir\pdb32\stripped\$(TargetName).pdb</StripPrivateSymbols>

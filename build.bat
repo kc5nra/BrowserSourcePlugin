@@ -12,7 +12,6 @@ copy Plugin\Release\BrowserSourcePlugin.dll Release\BrowserSourcePlugin
 copy Wrapper\Release\BrowserSourcePluginWrapper.dll Release\
 
 cd Release
-del BSP-%BSP_VERSION_BARE%.zip
-zip -r BSP-%BSP_VERSION_BARE%-x86.zip .
-move BSP-%BSP_VERSION_BARE%-x86.zip ..
+7z a BSP-%BSP_VERSION_BARE%-x86.7z .
+move BSP-%BSP_VERSION_BARE%-x86.7z ..
 cd ..

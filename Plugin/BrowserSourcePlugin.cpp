@@ -9,24 +9,24 @@
 
 #include "Scintilla.h"
 #include "SciLexer.h"
-#include <Awesomium\WebCore.h>
+//#include <Awesomium\WebCore.h>
 
 HINSTANCE BrowserSourcePlugin::hinstDLL = NULL;
 BrowserSourcePlugin *BrowserSourcePlugin::instance = NULL;
 
-String ToAPIString(WebString &webString) 
-{
-
-    int length = webString.ToUTF8(NULL, 0);
-    char *dest = (char *)Allocate(sizeof(char) * length + 1);
-    dest[length] = 0;
-    webString.ToUTF8(dest, length + 1);
-    String apiString(dest);
-
-    Free(dest);
-
-    return apiString;
-}
+//String ToAPIString(WebString &webString) 
+//{
+//
+//    int length = webString.ToUTF8(NULL, 0);
+//    char *dest = (char *)Allocate(sizeof(char) * length + 1);
+//    dest[length] = 0;
+//    webString.ToUTF8(dest, length + 1);
+//    String apiString(dest);
+//
+//    Free(dest);
+//
+//    return apiString;
+//}
 
 #define BROWSER_SOURCE_CLASS TEXT("BrowserSource")
 

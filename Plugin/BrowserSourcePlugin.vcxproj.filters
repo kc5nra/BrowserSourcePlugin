@@ -1,32 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="Extensions\AudioPlayerExtension.cpp">
-      <Filter>Extensions</Filter>
-    </ClCompile>
-    <ClCompile Include="Extensions\KeyboardExtension.cpp">
-      <Filter>Extensions</Filter>
-    </ClCompile>
-    <ClCompile Include="Extensions\KeyboardManager.cpp">
-      <Filter>Extensions</Filter>
-    </ClCompile>
     <ClCompile Include="BrowserSource.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="SwfReader.cpp">
       <Filter>Source</Filter>
     </ClCompile>
     <ClCompile Include="BrowserSourcePlugin.cpp">
       <Filter>Source</Filter>
     </ClCompile>
-    <ClCompile Include="Extensions\IrcExtension.cpp">
-      <Filter>Extensions</Filter>
-    </ClCompile>
     <ClCompile Include="STLUtilities.cpp">
       <Filter>Utilities</Filter>
-    </ClCompile>
-    <ClCompile Include="Extensions\Irc\libircclient.c">
-      <Filter>Extensions\Irc\Source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -45,56 +27,14 @@
     <ClInclude Include="resource.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="DataSources.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
     <ClInclude Include="MimeTypes.h">
       <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="SwfReader.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="JavascriptExtension.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="Extensions\AudioPlayerExtension.h">
-      <Filter>Extensions</Filter>
-    </ClInclude>
-    <ClInclude Include="Extensions\KeyboardExtension.h">
-      <Filter>Extensions</Filter>
-    </ClInclude>
-    <ClInclude Include="Extensions\KeyboardManager.h">
-      <Filter>Extensions</Filter>
-    </ClInclude>
-    <ClInclude Include="Extensions\IrcExtension.h">
-      <Filter>Extensions</Filter>
     </ClInclude>
     <ClInclude Include="STLUtilities.h">
       <Filter>Utilities</Filter>
     </ClInclude>
-    <ClInclude Include="Extensions\Irc\session.h">
-      <Filter>Extensions\Irc\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="Extensions\Irc\dcc.h">
-      <Filter>Extensions\Irc\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="Extensions\Irc\params.h">
-      <Filter>Extensions\Irc\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="Extensions\Irc\include\libircclient.h">
-      <Filter>Extensions\Irc\Include</Filter>
-    </ClInclude>
-    <ClInclude Include="Extensions\Irc\include\libirc_rfcnumeric.h">
-      <Filter>Extensions\Irc\Include</Filter>
-    </ClInclude>
-    <ClInclude Include="Extensions\Irc\include\libirc_options.h">
-      <Filter>Extensions\Irc\Include</Filter>
-    </ClInclude>
-    <ClInclude Include="Extensions\Irc\include\libirc_events.h">
-      <Filter>Extensions\Irc\Include</Filter>
-    </ClInclude>
-    <ClInclude Include="Extensions\Irc\include\libirc_errors.h">
-      <Filter>Extensions\Irc\Include</Filter>
+    <ClInclude Include="LocalFileHandler.h">
+      <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -104,26 +44,11 @@
     <Filter Include="Resources">
       <UniqueIdentifier>{eaab4fe5-9b27-442c-8663-4d24313a0f10}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Extensions">
-      <UniqueIdentifier>{ed63c11c-4b7e-4294-8c69-b4415ca802b1}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source">
       <UniqueIdentifier>{ae02072f-6531-4e91-9936-6b65b7667895}</UniqueIdentifier>
     </Filter>
     <Filter Include="Utilities">
       <UniqueIdentifier>{c219fcfc-1118-45c4-b8d4-9dcc229d9c8e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Extensions\Irc">
-      <UniqueIdentifier>{36c6c726-d98e-4003-a417-11965f201507}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Extensions\Irc\Headers">
-      <UniqueIdentifier>{e70963f7-a83c-4293-9b32-bbbdeedb0c7c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Extensions\Irc\Source">
-      <UniqueIdentifier>{85cc2d56-10a6-4f19-8960-b576d26bc091}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Extensions\Irc\Include">
-      <UniqueIdentifier>{1b99d8ad-0ab6-45e6-9c2a-1121d6067821}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

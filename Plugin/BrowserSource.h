@@ -5,26 +5,23 @@
 
 #include "OBSApi.h"
 
-#include "Awesomium\JSObject.h"
+//#include "Awesomium\JSObject.h"
 #include <vector>
-
-namespace Awesomium {
-    class WebCore;
-    class WebSession;
-    class WebView;
-    class JSArray;
-    class JSValue;
-    class JSMethodHandler;
-}
-
-class DataSourceWithMimeType;
-class JavascriptExtension;
-
+#include <map>
+#include <Coherent/UI/ViewListener.h>
 struct BrowserSourceConfig;
 
-class BrowserSource : public ImageSource
+namespace Coherent 
 {
-    class BrowserSourceListener;
+    namespace UI 
+    {
+        class UISystem;
+    }
+}
+
+class BrowserSource : public ImageSource, public Coherent::UI::ViewListener
+{
+    //class BrowserSourceListener;
 
 public:
     BrowserSource(XElement *data);
@@ -33,19 +30,24 @@ public:
 private:
     Vect2 browserSize;
     Texture *texture;
-    int id;
-    int hWebView;
+    bool isWaitingForView;
+    Coherent::UI::View *webView;
+
     bool hasRegisteredJavascriptExtensions;
 
     unsigned int hJSGlobal;
 
-    BrowserSourceListener *browserSourceListener;
+    //BrowserSourceListener *browserSourceListener;
 
-    std::vector<JavascriptExtension *> javascriptExtensions;
-    std::vector<DataSourceWithMimeType *> dataSources;
+    //std::vector<JavascriptExtension *> javascriptExtensions;
+    //std::vector<DataSourceWithMimeType *> dataSources;
 
     BrowserSourceConfig *config;
 
+    int globalSourceRefCount;
+    
+    std::map<Coherent::UI::CoherentHandle, Texture*> handleToTextureMap;
+    
     CRITICAL_SECTION textureLock;
 protected:
     CRITICAL_SECTION jsGlobalLock;
@@ -54,6 +56,8 @@ public:
     // ImageSource
     void Tick(float fSeconds);
     void Render(const Vect2 &pos, const Vect2 &size);
+    void GlobalSourceEnterScene();
+    void GlobalSourceLeaveScene();
 
 #ifdef INTERACTION_SUPPORT // remove when implemented
     void ProcessInteraction(Interaction &interaction);
@@ -62,14 +66,17 @@ public:
     void ChangeScene();
     void UpdateSettings();
     Vect2 GetSize() const;
-    int GetWebView() { return hWebView; }
-
-
+    Coherent::UI::View *GetWebView() { return webView; }
+    
 public:
     // callbacks
-    Awesomium::WebView *CreateWebViewCallback(Awesomium::WebCore *webCore, const int hWebView);
-    void UpdateCallback(Awesomium::WebView *webView);
-    void SceneChangeCallback(Awesomium::WebView *webView);
+    void CreateWebViewCallback(Coherent::UI::UISystem *system);
+
+    void OnViewCreated(Coherent::UI::View *view);
+    void CreateSurface(bool sharedMemory, unsigned width, unsigned height, Coherent::UI::SurfaceResponse *response);
+    void DestroySurface(Coherent::UI::CoherentHandle surface, bool usesSharedMemory);
+    void OnDraw(Coherent::UI::CoherentHandle handle, bool usesSharedMemory, int width, int height);
+    void OnURLRequest(const wchar_t* url, Coherent::UI::URLResponse* response);
 
 #ifdef INTERACTION_SUPPORT // remove when implemented
     void BrowserSource::InteractionCallback(Awesomium::WebView *webView, Interaction &interaction);

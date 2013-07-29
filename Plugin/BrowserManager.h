@@ -8,19 +8,54 @@
 
 #include "OBSApi.h"
 #include "BrowserSource.h"
+#include "LocalFileHandler.h"
 
-#include "JavascriptExtension.h"
-#include "Extensions\AudioPlayerExtension.h"
-#include "Extensions\KeyboardExtension.h"
-#include "Extensions\IrcExtension.h"
+//#include "JavascriptExtension.h"
+//#include "Extensions\AudioPlayerExtension.h"
+//#include "Extensions\KeyboardExtension.h"
+//#include "Extensions\IrcExtension.h"
 
-#include <Awesomium\WebCore.h>
-#include <Awesomium\WebView.h>
-#include <Awesomium\WebURL.h>
-#include <Awesomium\STLHelpers.h>
-#include <Awesomium\BitmapSurface.h>
+//#include <Awesomium\WebCore.h>
+//#include <Awesomium\WebView.h>
+//#include <Awesomium\WebURL.h>
+//#include <Awesomium\STLHelpers.h>
+//#include <Awesomium\BitmapSurface.h>
 
-using namespace Awesomium;
+#include <Coherent/UI/UISystem.h>
+#include <Coherent/UI/View.h>
+#include <Coherent/Libraries/Logging/Declarations.h>
+#include <Coherent/Libraries/Logging/ILogHandler.h>
+#include <Coherent/UI/License.h>
+
+
+class SystemEventListener : public Coherent::UI::EventListener
+{
+private:
+    Coherent::UI::UISystem *system;
+    bool isSystemReady;
+public:
+    SystemEventListener() 
+        : system (nullptr)
+        , isSystemReady(false) 
+    { }
+
+    virtual void SystemReady()
+    {
+        isSystemReady = true;
+    }
+
+public:
+
+    bool IsSystemReady()
+    {
+        return isSystemReady;
+    }
+
+    void SetSystemReady(bool isSystemReady)
+    {
+        this->isSystemReady = isSystemReady;
+    }
+};
 
 namespace Browser 
 {
@@ -36,11 +71,18 @@ namespace Browser
 
     struct Event 
     {
-        Event(EventType eventType, BrowserSource *source, int webView = -1, bool isNotifyingOnCompletion = false) 
+        enum EventType eventType;
+        BrowserSource *source;
+        HANDLE completionEvent;
+        void *info;
+        float timestamp;
+
+        Event(EventType eventType, BrowserSource *source, float timestamp = 0.0f, bool isNotifyingOnCompletion = false) 
         {
             this->eventType = eventType;
             this->source = source;
-            this->webView = webView;
+            this->timestamp = timestamp;
+
             if (isNotifyingOnCompletion) {
                 this->completionEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
             } else {
@@ -74,13 +116,47 @@ namespace Browser
             }
         }
 
-        enum EventType eventType;
-        BrowserSource *source;
-        int webView;
-        HANDLE completionEvent;
-        void *info;
+
     };
 }
+
+class BrowserLogHandler : public Coherent::Logging::ILogHandler
+{
+public:
+	/// Called when a log message has to be written
+	/// @param severity the severity of the message
+	/// @param message the log message itself
+	/// @param length the length of the message
+    void WriteLog(Coherent::Logging::Severity severity, const char* message, size_t length)
+    {
+        wchar_t *severityString;
+        switch (severity)
+        {
+        case Coherent::Logging::Trace:          severityString = TEXT("TRACE "); break;
+        case Coherent::Logging::Debug:          severityString = TEXT("DEBUG "); break;
+        case Coherent::Logging::Info:           severityString = TEXT("INFO  "); break;
+        case Coherent::Logging::Warning:        severityString = TEXT("WARN  "); break;
+        case Coherent::Logging::AssertFailure:  severityString = TEXT("ASSERT"); break;
+        case Coherent::Logging::Error:          severityString = TEXT("ERROR "); break;
+        }
+            
+        int messageBufferLength = utf8_to_wchar_len(message, length, 0);
+        wchar_t *messageBuffer = static_cast<wchar_t *>(calloc(messageBufferLength + 1, sizeof(wchar_t)));
+        utf8_to_wchar(message, length, messageBuffer, messageBufferLength, 0);
+
+        Log(TEXT("BrowserPlugin::%s | %s"), severityString, messageBuffer);
+
+        free(messageBuffer);
+    }
+
+	/// Called when an assert is triggered
+	/// @param message a message that describes the reason for the assertion
+	void Assert(const char* message)
+    {
+        // uh?
+        //AppWarning(String(message));
+    }
+};
 
 class BrowserManager
 {
@@ -95,12 +171,13 @@ public:
     }
 
 private:
-    WebCore *webCore;
 
-    CRITICAL_SECTION cs;
+    CRITICAL_SECTION pendingEventLock;
+    CRITICAL_SECTION pendingViewCreationLock;
 
-    std::vector<WebView *> webViews;
-    std::vector<JavascriptExtensionFactory *> javascriptExtensionFactories;
+    
+    std::vector<BrowserSource *> webViews;
+    //std::vector<JavascriptExtensionFactory *> javascriptExtensionFactories;
     std::vector<Browser::Event *> pendingEvents;
 
     Browser::Event *generalUpdate;
@@ -109,26 +186,29 @@ private:
     HANDLE hThread;
     HANDLE updateEvent;
 
+    unsigned int pendingViewCreations;
+
 public:
     BrowserManager() 
     {
-		InitializeCriticalSection(&cs);
+		InitializeCriticalSection(&pendingEventLock);
+        InitializeCriticalSection(&pendingViewCreationLock);
 
-        generalUpdate = new Browser::Event(Browser::UPDATE, NULL);
+        generalUpdate = new Browser::Event(Browser::UPDATE, NULL, FLT_MAX);
         updateEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
         hThread = NULL;
-        webCore = NULL;
         isStarted = false;  
 
+        
         // setup the default extensions
         //javascriptExtensionFactories.Add(new AudioPlayerExtensionFactory());
         //javascriptExtensionFactories.Add(new KeyboardExtensionFactory());
-        javascriptExtensionFactories.push_back(new IrcExtensionFactory());
+        //javascriptExtensionFactories.push_back(new IrcExtensionFactory());
     }
 
     ~BrowserManager() 
     {
-        RunAndWait(Browser::CLEANUP, NULL, 0);
+        RunAndWait(Browser::CLEANUP, NULL);
 
         // this is overkill
         // but make sure the thread has completed
@@ -140,11 +220,14 @@ public:
 
         assert(!isStarted);
 
-        for (UINT i = 0; i < javascriptExtensionFactories.size(); i++) {
+       /* for (UINT i = 0; i < javascriptExtensionFactories.size(); i++) {
             delete javascriptExtensionFactories[i];
-        }
+        }*/
 
         CloseHandle(updateEvent);
+        
+        DeleteCriticalSection(&pendingEventLock);
+        DeleteCriticalSection(&pendingViewCreationLock);
         delete generalUpdate;
     }
 
@@ -152,55 +235,49 @@ protected:
     // this method should never be called directly
     void BrowserManagerEntry() 
     {
-        WebConfig webConfig = WebConfig();
-        webConfig.remote_debugging_port = 1337;
-        webCore = WebCore::Initialize(webConfig);
+        SystemEventListener systemEventListener;
+        BrowserLogHandler logHandler;
+        LocalFileHandler localFileHandler;
+
+        Coherent::UI::SystemSettings settings;
+        settings.HostDirectory = L"plugins\\BrowserSourcePlugin\\host";
+        settings.HTML5LocalStoragePath = L"storage";
+        settings.AllowCookies = true;
+        settings.CookiesResource = L"cookies.dat";
+        settings.DisableWebSecurity = true;
+        settings.CachePath = L"cache";
+        settings.WriteMinidumps = true;
+        settings.DebuggerPort = 1337;
+        
+        Coherent::UI::UISystem* system = InitializeUISystem(COHERENT_KEY, settings, &systemEventListener, Coherent::Logging::Debug, &logHandler/*, &localFileHandler*/);
+        
+        float currentTimestamp = 0.0f;
 
         for(;;) {
 
-            WaitForSingleObject(updateEvent, INFINITE);
+            WaitForSingleObject(updateEvent, 10);
+
+            if (!systemEventListener.IsSystemReady()) {
+                system->Update();
+                continue;
+            }
+
             while(pendingEvents.size()) {
-                EnterCriticalSection(&cs);
+                EnterCriticalSection(&pendingEventLock);
                 Browser::Event *browserEvent = pendingEvents[0];
-                LeaveCriticalSection(&cs);
+                LeaveCriticalSection(&pendingEventLock);
 
                 switch(browserEvent->eventType) {
                 case Browser::CREATE_VIEW: 
                     {
-                        int insertIndex = -1;
-
-                        if (browserEvent->webView >= 0) {
-                            WebView *webView = webViews[browserEvent->webView];
-                            webView->Destroy();
-                            webViews.erase(webViews.begin() + browserEvent->webView);
-
-                            // reuse the index we just deleted
-                            insertIndex = browserEvent->webView;
-                        } else {
-                            for(UINT i = 0; i < webViews.size(); i++) {
-                                if (webViews[i] == NULL) {
-                                    insertIndex = i;
-                                    webViews.erase(webViews.begin() + i);
-                                    break;
-                                }
-                            }
-                        }
-
-                        if (insertIndex >= 0) {
-                            webViews.insert(webViews.begin() + insertIndex, browserEvent->source->CreateWebViewCallback(webCore, insertIndex));
-                        } else {
-                            webViews.push_back(browserEvent->source->CreateWebViewCallback(webCore, webViews.size()));
-                        }
-
+                        browserEvent->source->CreateWebViewCallback(system);
                         browserEvent->Complete();
                         delete browserEvent;
                         break;
                     }
                 case Browser::SCENE_CHANGE:
                     {
-                        webCore->Update();
-                        browserEvent->source->SceneChangeCallback(webViews[browserEvent->webView]);
-                        browserEvent->Complete();
+                        system->Update();
                         delete browserEvent;
                         break;
                     }
@@ -217,38 +294,34 @@ protected:
                     }
                 case Browser::UPDATE:
                     {
-                        webCore->Update();
-
-                        if (browserEvent->source) {
-                            browserEvent->source->UpdateCallback(webViews[browserEvent->webView]);
-                            browserEvent->Complete();
+                        if (browserEvent->timestamp != currentTimestamp) {
+                            if (browserEvent->timestamp < FLT_MAX) {
+                                currentTimestamp = browserEvent->timestamp;
+                            }
+                            system->Update();
+                            system->FetchSurfaces();
+                        }
+                        
+                        if (browserEvent->source != nullptr) {
                             delete browserEvent;
                             break;
                         }
 
                         browserEvent->Complete();
+
+                        
+
                         break;
                     }
                 case Browser::SHUTDOWN: 
                     {
-                        if (browserEvent->source->GetWebView() >= 0) {
+                        if (browserEvent->source != nullptr) {
 
-                            int hWebView = browserEvent->source->GetWebView();
-                            WebView *webView = (hWebView >= 0) ? webViews[hWebView] : nullptr;
-                            if (webView) {
-                                webView->LoadURL(WebURL(WSLit("about:blank")));
-                                // fixes a bug in awesomium where if you destroy it while a flash application
-                                // is running it may fail when doing in the future.
-                                while(webView->IsLoading()) {
-                                    webCore->Update();
-                                    Sleep(20);
-                                }
-                                webView->Destroy();
-                                webViews.erase(webViews.begin() + hWebView);
-                                webViews.insert(webViews.begin() + hWebView, nullptr);
+                            if (browserEvent->source->GetWebView() != nullptr) {
+                                browserEvent->source->GetWebView()->Destroy();
                             }
 
-                            EnterCriticalSection(&cs);
+                            EnterCriticalSection(&pendingEventLock);
                             for(UINT i = 1; i < pendingEvents.size(); i++) {
                                 // remove all events belonging to this web view
                                 // this would include only Update, Shutdown and Create View requests
@@ -260,7 +333,7 @@ protected:
                                     i--;
                                 }
                             }
-                            LeaveCriticalSection(&cs);
+                            LeaveCriticalSection(&pendingEventLock);
                         }
 
                         browserEvent->Complete();
@@ -270,24 +343,8 @@ protected:
 
                 case Browser::CLEANUP:
                     {
-                        while(webViews.size()) {
-                            // by the time we get here,  everything should already be shut down
-                            WebView *webView = webViews[0];
-                            webViews.erase(webViews.begin());
-                            if (webView) {
-                                webView->LoadURL(WebURL(WSLit("about:blank")));
-                                // fixes a bug in awesomium where if you destroy it while a flash application
-                                // is running it may fail when doing in the future.
-                                while(webView->IsLoading()) {
-                                    webCore->Update();
-                                    Sleep(20);
-                                }
-                                webView->Destroy();
-                            }
-                        }
-
-                        webCore->Shutdown();
-
+                        system->Uninitialize();
+                     
                         isStarted = false;
 
                         browserEvent->Complete();
@@ -297,9 +354,9 @@ protected:
                     }
                 }
 
-                EnterCriticalSection(&cs);
+                EnterCriticalSection(&pendingEventLock);
                 pendingEvents.erase(pendingEvents.begin());
-                LeaveCriticalSection(&cs);
+                LeaveCriticalSection(&pendingEventLock);
             }
 
         }
@@ -323,16 +380,16 @@ public:
 
     void AddEvent(Browser::Event *browserEvent)
     {
-        EnterCriticalSection(&cs);
+        EnterCriticalSection(&pendingEventLock);
         pendingEvents.push_back(browserEvent);
-        LeaveCriticalSection(&cs);
+        LeaveCriticalSection(&pendingEventLock);
         SetEvent(updateEvent);
     }
 
-    void RunAndWait(Browser::EventType eventType, BrowserSource *browserSource, int hWebView) 
+    void RunAndWait(Browser::EventType eventType, BrowserSource *browserSource) 
     {
         if (isStarted) {
-            Browser::Event *blockingEvent = new Browser::Event(eventType, browserSource, hWebView, true);
+            Browser::Event *blockingEvent = new Browser::Event(eventType, browserSource, 0.0f, true);
             AddEvent(blockingEvent);
             WaitForSingleObject(blockingEvent->completionEvent, INFINITE);
         }
@@ -340,18 +397,18 @@ public:
 
     void ShutdownAndWait(BrowserSource *browserSource)
     {
-        RunAndWait(Browser::SHUTDOWN, browserSource, -1);
+        RunAndWait(Browser::SHUTDOWN, browserSource);
     }
 
 public:
-    WebCore *GetWebCore() 
-    {
-        return webCore;
-    }
+    //WebCore *GetWebCore() 
+    //{
+    //    return webCore;
+    //}
 
-    std::vector<JavascriptExtensionFactory *> &GetJavascriptExtensionFactories()
-    {
-        return javascriptExtensionFactories;
-    }
+    //std::vector<JavascriptExtensionFactory *> &GetJavascriptExtensionFactories()
+    //{
+    //    return javascriptExtensionFactories;
+    //}
 
 };

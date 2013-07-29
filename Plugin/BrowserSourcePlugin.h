@@ -15,7 +15,7 @@ namespace Awesomium
     class WebCore;
 }
 
-extern String ToAPIString(WebString &webString);
+//extern String ToAPIString(WebString &webString);
 
 struct BrowserSourceConfig 
 {
