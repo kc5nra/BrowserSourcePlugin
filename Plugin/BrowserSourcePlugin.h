@@ -48,11 +48,20 @@ public:  // transient data, only rely on this if you know what you are doing
         url = TEXT("http://www.obsproject.com");
         width = 640;
         height = 480;
-        customCss = TEXT("::-webkit-scrollbar { visibility: hidden; }\r\nbody { background-color: rgba(0, 0, 0, 0); }");
+        customCss = 
+            L"::-webkit-scrollbar {\r\n"
+            L"  visibility: hidden;\r\n"
+            L"}\r\n"
+            L"body {\r\n"
+            L"  background-color: rgba(0, 0, 0, 0);\r\n"
+            L"  margin: 0px auto;\r\n"
+            L"}\r\n";
         isWrappingAsset = false;
         assetWrapTemplate =
             L"<html>\r\n"
-            L"  <head></head>\r\n"
+            L"  <head>\r\n"
+            L" 	  <meta charset='utf-8'/>\r\n"
+            L"  </head>\r\n"
             L"  <body>\r\n"
             L"    <object width='$(WIDTH)' height='$(HEIGHT)'>\r\n"
             L"      <param name='movie' value='$(FILE)'></param>\r\n"
