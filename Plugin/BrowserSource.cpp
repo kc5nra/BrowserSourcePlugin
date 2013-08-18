@@ -100,6 +100,8 @@ BrowserSource::BrowserSource(XElement *data)
 	Log(TEXT("Using Browser Source"));
 
     hWebView = -2;
+    globalSourceRefCount = 1;
+
     hasRegisteredJavascriptExtensions = false;
 
     browserSourceListener = new BrowserSourceListener(this);
@@ -143,11 +145,23 @@ void BrowserSource::Tick(float fSeconds)
 {
     BrowserManager *browserManager = BrowserSourcePlugin::instance->GetBrowserManager();
 
-    if (hWebView == PENDING_VIEW) {
-        browserManager->Update();
-    } else if (hWebView >= 0) {
-        browserManager->AddEvent(new Browser::Event(Browser::UPDATE, this, hWebView));
+    if (globalSourceRefCount > 0) {
+        if (hWebView == PENDING_VIEW) {
+            browserManager->Update();
+        } else if (hWebView >= 0) {
+            browserManager->AddEvent(new Browser::Event(Browser::UPDATE, this, hWebView));
+        }
     }
+}
+
+void BrowserSource::GlobalSourceEnterScene()
+{
+    InterlockedIncrement(&globalSourceRefCount);
+}
+
+void BrowserSource::GlobalSourceLeaveScene()
+{
+    InterlockedDecrement(&globalSourceRefCount);
 }
 
 WebView *BrowserSource::CreateWebViewCallback(WebCore *webCore, const int hWebView) 
@@ -247,14 +261,16 @@ WebView *BrowserSource::CreateWebViewCallback(WebCore *webCore, const int hWebVi
 
 void BrowserSource::UpdateCallback(WebView *webView)
 {
-    BitmapSurface *surface = (BitmapSurface *)webView->surface();
+    if (globalSourceRefCount > 0) {
+        BitmapSurface *surface = (BitmapSurface *)webView->surface();
 
-    EnterCriticalSection(&textureLock);
-    if (surface && texture) {
-        texture->SetImage(const_cast<unsigned char *>(surface->buffer()), GS_IMAGEFORMAT_BGRA, surface->row_span());
+        EnterCriticalSection(&textureLock);
+        if (surface && texture) {
+            texture->SetImage(const_cast<unsigned char *>(surface->buffer()), GS_IMAGEFORMAT_BGRA, surface->row_span());
+        }
+
+        LeaveCriticalSection(&textureLock);
     }
-
-    LeaveCriticalSection(&textureLock);
 
 }
 

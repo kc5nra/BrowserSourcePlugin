@@ -36,7 +36,7 @@ private:
     int id;
     int hWebView;
     bool hasRegisteredJavascriptExtensions;
-
+    volatile unsigned int globalSourceRefCount;
     unsigned int hJSGlobal;
 
     BrowserSourceListener *browserSourceListener;
@@ -59,9 +59,16 @@ public:
     void ProcessInteraction(Interaction &interaction);
 #endif INTERACTION_SUPPORT // remove when implemented
 
+    void GlobalSourceEnterScene();
+    void GlobalSourceLeaveScene();
     void ChangeScene();
+
     void UpdateSettings();
     Vect2 GetSize() const;
+
+
+
+public:
     int GetWebView() { return hWebView; }
 
 
