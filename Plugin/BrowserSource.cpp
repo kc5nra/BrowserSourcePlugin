@@ -100,7 +100,7 @@ BrowserSource::BrowserSource(XElement *data)
 	Log(TEXT("Using Browser Source"));
 
     hWebView = -2;
-    globalSourceRefCount = 1;
+    isInScene = true;
 
     hasRegisteredJavascriptExtensions = false;
 
@@ -145,7 +145,7 @@ void BrowserSource::Tick(float fSeconds)
 {
     BrowserManager *browserManager = BrowserSourcePlugin::instance->GetBrowserManager();
 
-    if (globalSourceRefCount > 0) {
+    if (isInScene) {
         if (hWebView == PENDING_VIEW) {
             browserManager->Update();
         } else if (hWebView >= 0) {
@@ -156,12 +156,12 @@ void BrowserSource::Tick(float fSeconds)
 
 void BrowserSource::GlobalSourceEnterScene()
 {
-    InterlockedIncrement(&globalSourceRefCount);
+    isInScene = true;
 }
 
 void BrowserSource::GlobalSourceLeaveScene()
 {
-    InterlockedDecrement(&globalSourceRefCount);
+    isInScene = false;
 }
 
 WebView *BrowserSource::CreateWebViewCallback(WebCore *webCore, const int hWebView) 
@@ -261,7 +261,7 @@ WebView *BrowserSource::CreateWebViewCallback(WebCore *webCore, const int hWebVi
 
 void BrowserSource::UpdateCallback(WebView *webView)
 {
-    if (globalSourceRefCount > 0) {
+    if (isInScene) {
         BitmapSurface *surface = (BitmapSurface *)webView->surface();
 
         EnterCriticalSection(&textureLock);

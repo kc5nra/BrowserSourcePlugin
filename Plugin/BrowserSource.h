@@ -36,7 +36,7 @@ private:
     int id;
     int hWebView;
     bool hasRegisteredJavascriptExtensions;
-    volatile unsigned int globalSourceRefCount;
+    volatile bool isInScene;
     unsigned int hJSGlobal;
 
     BrowserSourceListener *browserSourceListener;
