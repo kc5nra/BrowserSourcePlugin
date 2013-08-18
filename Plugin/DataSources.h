@@ -27,10 +27,10 @@ public:
     virtual ~DataSourceWithMimeType() {};
 
 protected:
-    std::map<std::string, std::string> mimeTypes;
+    std::map<std::wstring, std::wstring> mimeTypes;
 
 public:
-    void AddMimeType(const std::string &mimeType, const std::string &fileType) 
+    void AddMimeType(const std::wstring &mimeType, const std::wstring &fileType) 
     {
         // keyed by file extension
         mimeTypes[fileType] = mimeType;
@@ -65,45 +65,48 @@ public:
         if (isWrappingAsset) {
             isWrappingAsset = false;
 
-		    BSP::ReplaceStringInPlace(assetWrapTemplate, "$(WIDTH)", BSP::IntegerToString(width));
-		    BSP::ReplaceStringInPlace(assetWrapTemplate, "$(HEIGHT)", BSP::IntegerToString(height));
+            BSP::ReplaceStringInPlace(assetWrapTemplate, "$(WIDTH)", BSP::IntegerToString(width));
+            BSP::ReplaceStringInPlace(assetWrapTemplate, "$(HEIGHT)", BSP::IntegerToString(height));
 
             SendResponse(request_id,
-			    assetWrapTemplate.length(),
+                assetWrapTemplate.length(),
                 (unsigned char *)assetWrapTemplate.c_str(),
                 WSLit("text/html"));
         } else {
-            
+
             std::string filePath = ToString(path);
-		    filePath = filePath.substr(0, filePath.find('?'));
+            filePath = filePath.substr(0, filePath.find('?'));
 
-		    std::ifstream ifs;
-		    ifs.open(filePath, std::ifstream::binary);
-		    std::vector<char> data;
-		    if (ifs.good()) {
-			    ifs.seekg(0, std::ifstream::end);
-			    size_t file_size_in_byte = (size_t)ifs.tellg();
-			    data.resize(file_size_in_byte);
-			    ifs.seekg(0, std::ifstream::beg);
-			    ifs.read(&data[0], file_size_in_byte);
-		    }
-		    ifs.close();
+            std::wstring filePath16((wchar_t *)path.data());
+            filePath16 = filePath16.substr(0, filePath16.find('?'));
 
-            std::string mimeType = "text/html";
+            std::ifstream ifs;
+            ifs.open(filePath16, std::ifstream::binary);
+            std::vector<char> data;
+            if (ifs.good()) {
+                ifs.seekg(0, std::ifstream::end);
+                size_t file_size_in_byte = (size_t)ifs.tellg();
+                data.resize(file_size_in_byte);
+                ifs.seekg(0, std::ifstream::beg);
+                ifs.read(&data[0], file_size_in_byte);
+            }
+            ifs.close();
 
-		    // chop off ext and lower case it
-            std::string fileExtension = filePath.substr(filePath.find_last_of(".") + 1);
-		    std::transform(fileExtension.begin(), fileExtension.end(), fileExtension.begin(), std::tolower);
+            std::wstring mimeType = L"text/html";
 
-		    auto itor = mimeTypes.find(fileExtension);
-		    if (itor != mimeTypes.end()) {
-			    mimeType = itor->second;
-		    }
+            // chop off ext and lower case it
+            std::wstring fileExtension = filePath16.substr(filePath16.find_last_of(L".") + 1);
+            std::transform(fileExtension.begin(), fileExtension.end(), fileExtension.begin(), std::tolower);
+
+            auto itor = mimeTypes.find(fileExtension);
+            if (itor != mimeTypes.end()) {
+                mimeType = itor->second;
+            }
 
             SendResponse(request_id,
                 data.size(),
-               (data.size()) ? (unsigned char *)&data[0] : NULL,
-                ToWebString(mimeType));
+                (data.size()) ? (unsigned char *)&data[0] : NULL,
+                WebString((wchar16 *)mimeType.data()));
         }
     }
 
@@ -136,17 +139,17 @@ public:
 public:
     virtual void OnRequest(int request_id, const WebString& path) 
     {
-        
-    	std::string filePath = ToString(path);
-		filePath = filePath.substr(0, filePath.find('?'));
+
+        std::string filePath = ToString(path);
+        filePath = filePath.substr(0, filePath.find('?'));
 
         if (isWrappingAsset) {
             isWrappingAsset = false;
 
             std::string fileName = filePath.substr(filePath.find_last_of("/") + 1);
 
-			BSP::ReplaceStringInPlace(assetWrapTemplate, "$(FILE)", fileName);
-			BSP::ReplaceStringInPlace(assetWrapTemplate, "$(WIDTH)", BSP::IntegerToString(width));
+            BSP::ReplaceStringInPlace(assetWrapTemplate, "$(FILE)", fileName);
+            BSP::ReplaceStringInPlace(assetWrapTemplate, "$(WIDTH)", BSP::IntegerToString(width));
             BSP::ReplaceStringInPlace(assetWrapTemplate, "$(HEIGHT)", BSP::IntegerToString(height));
 
             //TODO: Figure out what to do with this information
@@ -166,34 +169,36 @@ public:
                 WSLit("text/html"));
 
         } else {
+            std::wstring filePath16((wchar_t *)path.data());
+            filePath16 = filePath16.substr(0, filePath16.find('?'));
 
             std::ifstream ifs;
-		    ifs.open(filePath, std::ifstream::binary);
-		    std::vector<char> data;
-		    if (ifs.good()) {
-			    ifs.seekg(0, std::ifstream::end);
-			    size_t file_size_in_byte = (size_t)ifs.tellg();
-			    data.resize(file_size_in_byte);
-			    ifs.seekg(0, std::ifstream::beg);
-			    ifs.read(&data[0], file_size_in_byte);
-		    }
-		    ifs.close();
+            ifs.open(filePath16, std::ifstream::binary);
+            std::vector<char> data;
+            if (ifs.good()) {
+                ifs.seekg(0, std::ifstream::end);
+                size_t file_size_in_byte = (size_t)ifs.tellg();
+                data.resize(file_size_in_byte);
+                ifs.seekg(0, std::ifstream::beg);
+                ifs.read(&data[0], file_size_in_byte);
+            }
+            ifs.close();
 
-            std::string mimeType = "text/html";
+            std::wstring mimeType = L"text/html";
 
-		    // chop off ext and lower case it
-            std::string fileExtension = filePath.substr(filePath.find_last_of(".") + 1);
-		    std::transform(fileExtension.begin(), fileExtension.end(), fileExtension.begin(), std::tolower);
+            // chop off ext and lower case it
+            std::wstring fileExtension = filePath16.substr(filePath16.find_last_of(L".") + 1);
+            std::transform(fileExtension.begin(), fileExtension.end(), fileExtension.begin(), std::tolower);
 
-		    auto itor = mimeTypes.find(fileExtension);
-		    if (itor != mimeTypes.end()) {
-			    mimeType = itor->second;
-		    }
+            auto itor = mimeTypes.find(fileExtension);
+            if (itor != mimeTypes.end()) {
+                mimeType = itor->second;
+            }
 
             SendResponse(request_id,
                 data.size(),
-               (data.size()) ? (unsigned char *)&data[0] : NULL,
-                ToWebString(mimeType));
+                (data.size()) ? (unsigned char *)&data[0] : NULL,
+                WebString((wchar16 *)fileExtension.c_str()));
         }
     }
 

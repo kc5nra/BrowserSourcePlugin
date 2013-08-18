@@ -99,7 +99,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>$(ProjectDir)lib;$(SolutionDir)..\OBS\OBSApi;$(AWE_DIR)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_HAS_EXCEPTIONS=0;D_STATIC_CPPLIB;WIN32;_WIN32;$(BSP_VERSION);_DEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>UNICODE;_CRT_SECURE_NO_WARNINGS;_HAS_EXCEPTIONS=0;D_STATIC_CPPLIB;WIN32;_WIN32;$(BSP_VERSION);_DEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -128,7 +128,7 @@
       <Optimization>Full</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <AdditionalIncludeDirectories>$(ProjectDir)lib;$(SolutionDir)..\OBS\OBSApi;$(AWE_DIR)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_HAS_EXCEPTIONS=0;D_STATIC_CPPLIB;WIN32;_WIN32;$(BSP_VERSION);NDEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>UNICODE;_CRT_SECURE_NO_WARNINGS;_HAS_EXCEPTIONS=0;D_STATIC_CPPLIB;WIN32;_WIN32;$(BSP_VERSION);NDEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PrecompiledHeader>

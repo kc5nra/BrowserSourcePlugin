@@ -190,7 +190,8 @@ WebView *BrowserSource::CreateWebViewCallback(WebCore *webCore, const int hWebVi
     dataSources.push_back(new BlankDataSource(config->isWrappingAsset, assetWrapTemplate, config->width, config->height));
 
     for(UINT i = 0; i < dataSources.size(); i++) {
-        int mimeTypeCount = sizeof(mimeTypes) / sizeof(CTSTR);
+        int mimeTypeCount = sizeof(mimeTypes) / sizeof(*mimeTypes);
+        mimeTypeCount /= 2;
         for(int j = 0; j < mimeTypeCount; j += 2) {
             dataSources[i]->AddMimeType(mimeTypes[j], mimeTypes[j+1]);
         }
