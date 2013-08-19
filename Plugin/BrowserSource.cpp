@@ -145,14 +145,12 @@ void BrowserSource::Tick(float fSeconds)
 {
     BrowserManager *browserManager = BrowserSourcePlugin::instance->GetBrowserManager();
 
-    if (isInScene) {
-        if (hWebView == PENDING_VIEW) {
-            browserManager->Update();
-        } else if (hWebView >= 0) {
-            browserManager->AddEvent(new Browser::Event(Browser::UPDATE, this, hWebView));
-        }
+    if (hWebView == PENDING_VIEW) {
+        browserManager->Update();
+    } else if (hWebView >= 0) {
+        browserManager->AddEvent(new Browser::Event(Browser::UPDATE, this, hWebView));
     }
-}
+    }
 
 void BrowserSource::GlobalSourceEnterScene()
 {
@@ -204,8 +202,7 @@ WebView *BrowserSource::CreateWebViewCallback(WebCore *webCore, const int hWebVi
     dataSources.push_back(new BlankDataSource(config->isWrappingAsset, assetWrapTemplate, config->width, config->height));
 
     for(UINT i = 0; i < dataSources.size(); i++) {
-        int mimeTypeCount = sizeof(mimeTypes) / sizeof(*mimeTypes);
-        mimeTypeCount /= 2;
+        int mimeTypeCount = sizeof(mimeTypes) / 4;
         for(int j = 0; j < mimeTypeCount; j += 2) {
             dataSources[i]->AddMimeType(mimeTypes[j], mimeTypes[j+1]);
         }

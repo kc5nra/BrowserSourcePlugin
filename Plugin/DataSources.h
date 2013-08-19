@@ -33,7 +33,7 @@ public:
     void AddMimeType(const std::wstring &mimeType, const std::wstring &fileType) 
     {
         // keyed by file extension
-        mimeTypes[fileType] = mimeType;
+        mimeTypes.insert(std::pair<std::wstring, std::wstring>(fileType, mimeType));
     }
 
     virtual WebString GetHost() = 0;
@@ -189,7 +189,7 @@ public:
             // chop off ext and lower case it
             std::wstring fileExtension = filePath16.substr(filePath16.find_last_of(L".") + 1);
             std::transform(fileExtension.begin(), fileExtension.end(), fileExtension.begin(), std::tolower);
-
+            
             auto itor = mimeTypes.find(fileExtension);
             if (itor != mimeTypes.end()) {
                 mimeType = itor->second;
@@ -198,7 +198,7 @@ public:
             SendResponse(request_id,
                 data.size(),
                 (data.size()) ? (unsigned char *)&data[0] : NULL,
-                WebString((wchar16 *)fileExtension.c_str()));
+                WebString((wchar16 *)mimeType.c_str()));
         }
     }
 
